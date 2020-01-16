@@ -1,0 +1,79 @@
+[package]
+name = "substrate-validator-set"
+version = "0.1.0"
+authors = ["gautamdhameja"]
+edition = "2018"
+
+[features]
+default = ['std']
+std = [
+    'codec/std',
+    'sp-std/std',
+    'sp-runtime/std',
+    'frame-support/std',
+    'sp-core/std',
+    'sp-io/std',
+    'system/std',
+    'serde',
+    'safe-mix/std',
+    'session/std'
+]
+
+[dependencies.codec]
+default-features = false
+features = ['derive']
+package = 'parity-scale-codec'
+version = '1.0.0'
+
+[dependencies.sp-std]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+rev = '9ded493bac83f9d2a66e6afce068e2ead2bd20ab'
+version = '2.0.0'
+
+[dependencies.sp-runtime]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+rev = '9ded493bac83f9d2a66e6afce068e2ead2bd20ab'
+version = '2.0.0'
+
+[dependencies.sp-io]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+rev = '9ded493bac83f9d2a66e6afce068e2ead2bd20ab'
+version = '2.0.0'
+
+[dependencies.safe-mix]
+default-features = false
+version = '1.0'
+
+[dependencies.serde]
+features = ['derive']
+optional = true
+version = '1.0.101'
+
+[dependencies.sp-core]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+rev = '9ded493bac83f9d2a66e6afce068e2ead2bd20ab'
+version = '2.0.0'
+
+[dependencies.frame-support]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+rev = '9ded493bac83f9d2a66e6afce068e2ead2bd20ab'
+version = '2.0.0'
+
+[dependencies.system]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+package = 'frame-system'
+rev = '9ded493bac83f9d2a66e6afce068e2ead2bd20ab'
+version = '2.0.0'
+
+[dependencies.session]
+default_features = false
+git = 'https://github.com/paritytech/substrate.git'
+package = 'pallet-session'
+rev = '9ded493bac83f9d2a66e6afce068e2ead2bd20ab'
+version = '2.0.0'
