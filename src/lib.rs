@@ -1,3 +1,11 @@
+//! # Validator Set Pallet
+//!
+//! The Validator Set Pallet provides functionality to add/remove validators in a Substrate-based
+//! PoA network.
+//! 
+//! The pallet is based on the Substrate session pallet and implements related traits for session 
+//! management when validators are added or removed.
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use sp_std::prelude::*;
@@ -44,22 +52,19 @@ decl_module! {
 	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
 		fn deposit_event() = default;
 
-		fn on_initialize() {
-			if Self::flag() {
-				Flag::put(false);
-			}
-		}
-
 		/// Add a new validator using root/sudo privileges.
 		///
-		/// New validator's session keys should be set using session module before calling this.
+		/// New validator's session keys should be set in session module before calling this.
 		pub fn add_validator(origin, validator_id: T::AccountId) -> dispatch::DispatchResult {
 			ensure_root(origin)?;
 			let mut validators = Self::validators().ok_or(Error::<T>::NoValidators)?;
 			validators.push(validator_id.clone());
 			<Validators<T>>::put(validators);
+			// Calling rotate_session to queue the new session keys.
+			<session::Module<T>>::rotate_session();
 			Self::deposit_event(RawEvent::ValidatorAdded(validator_id));
 
+			// Triggering rotate session again for the queued keys to take effect.
 			Flag::put(true);
 			Ok(())
 		}
@@ -69,7 +74,7 @@ decl_module! {
 			ensure_root(origin)?;
 			let mut validators = Self::validators().ok_or(Error::<T>::NoValidators)?;
 			// Assuming that this will be a PoA network for enterprise use-cases, 
-			// the validator count may not be too big, hence the for loop.
+			// the validator count may not be too big; the for loop shouldn't be too heavy.
 			// In case the validator count is large, we need to find another way.
 			for (i, v) in validators.clone().into_iter().enumerate() {
 				if v == validator_id {
@@ -77,8 +82,11 @@ decl_module! {
 				}
 			}
 			<Validators<T>>::put(validators);
+			// Calling rotate_session to queue the new session keys.
+			<session::Module<T>>::rotate_session();
 			Self::deposit_event(RawEvent::ValidatorRemoved(validator_id));
 
+			// Triggering rotate session again for the queued keys to take effect.
 			Flag::put(true);
 			Ok(())
 		}
@@ -96,6 +104,9 @@ impl<T: Trait> session::ShouldEndSession<T::BlockNumber> for Module<T> {
 /// Provides the new set of validators to the session module when session is being rotated.
 impl<T: Trait> session::OnSessionEnding<T::AccountId> for Module<T> {
 	fn on_session_ending(_ending: u32, _start_session: u32) -> Option<Vec<T::AccountId>> {
+		// Flag is set to false so that the session doesn't keep rotating.
+		Flag::put(false);
+
 		Self::validators()
 	}
 }
