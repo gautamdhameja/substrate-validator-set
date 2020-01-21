@@ -102,20 +102,15 @@ impl<T: Trait> session::ShouldEndSession<T::BlockNumber> for Module<T> {
 }
 
 /// Provides the new set of validators to the session module when session is being rotated.
-impl<T: Trait> session::OnSessionEnding<T::AccountId> for Module<T> {
-	fn on_session_ending(_ending: u32, _start_session: u32) -> Option<Vec<T::AccountId>> {
+impl<T: Trait> session::SessionManager<T::AccountId> for Module<T> {
+	fn new_session(_new_index: u32) -> Option<Vec<T::AccountId>> {
 		// Flag is set to false so that the session doesn't keep rotating.
 		Flag::put(false);
 
 		Self::validators()
 	}
-}
 
-/// Provides the initial set of validators.
-impl<T: Trait> session::SelectInitialValidators<T::AccountId> for Module<T> {
-	fn select_initial_validators() -> Option<Vec<T::AccountId>> {
-		Self::validators()
-	}
+	fn end_session(_end_index: u32) {}
 }
 
 /// Implementation of Convert trait for mapping ValidatorId with AccountId.
