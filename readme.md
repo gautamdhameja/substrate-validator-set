@@ -2,6 +2,10 @@
 
 A Substrate pallet to add/remove validators in Substrate-based PoA networks.
 
+## Demo
+
+To see this pallet in action in a Substrate runtime, watch this video - https://www.youtube.com/watch?v=lIYxE-tOAdw
+
 ## Usage
 
 * Add the module's dependency in the `Cargo.toml` of your runtime directory. Make sure to enter the correct path or git url of the pallet as per your setup.
