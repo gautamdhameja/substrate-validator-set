@@ -1,12 +1,14 @@
 # Substrate Validator Set
 
-A Substrate pallet to add/remove validators in Substrate-based PoA networks.
+A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove validators using extrinsics, in Substrate PoA networks. 
+
+**Note: Current build is compatible with Substrate [v2.0.0-rc4](https://github.com/paritytech/substrate/releases/tag/v2.0.0-rc4) release.**
 
 ## Demo
 
 To see this pallet in action in a Substrate runtime, watch this video - https://www.youtube.com/watch?v=lIYxE-tOAdw
 
-## Usage
+## Setup with Substrate Node Template
 
 * Add the module's dependency in the `Cargo.toml` of your runtime directory. Make sure to enter the correct path or git url of the pallet as per your setup.
 
@@ -38,6 +40,7 @@ impl session::Trait for Runtime {
 	type SessionManager = ValidatorSet;
 	type Event = Event;
 	type Keys = opaque::SessionKeys;
+	type NextSessionRotation = ValidatorSet;
 	type ValidatorId = <Self as system::Trait>::AccountId;
 	type ValidatorIdOf = validatorset::ValidatorOf<Self>;
 	type DisabledValidatorsThreshold = ();
@@ -64,31 +67,40 @@ construct_runtime!(
 );
 ```
 
-* Add genesis config for `session` and `validatorset` pallets and update it for `Aura` and `Grandpa` pallets. Because the validators are provided by the `session` pallet, we do not initialize them explicitly in `Aura` and `Grandpa` pallets.
+* Add genesis config in the `chain_spec.rs` file for `session` and `validatorset` pallets, and update it for `Aura` and `Grandpa` pallets. Because the validators are provided by the `session` pallet, we do not initialize them explicitly for `Aura` and `Grandpa` pallets.
 
 ```rust
-validatorset: Some(ValidatorSetConfig {
-	validators: initial_authorities.iter().map(|x| x.0.clone()).collect::<Vec<_>>(),
-}),
-session: Some(SessionConfig {
-	keys: initial_authorities.iter().map(|x| {
-		(x.0.clone(), session_keys(x.1.clone(), x.2.clone()))
-	}).collect::<Vec<_>>(),
-}),
-aura: Some(AuraConfig {
-	authorities: vec![],
-}),
-grandpa: Some(GrandpaConfig {
-   	authorities: vec![],
-}),
+fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
+	root_key: AccountId,
+	endowed_accounts: Vec<AccountId>,
+	_enable_println: bool) -> GenesisConfig {
+	GenesisConfig {
+		...,
+		validatorset: Some(ValidatorSetConfig {
+			validators: initial_authorities.iter().map(|x| x.0.clone()).collect::<Vec<_>>(),
+		}),
+		session: Some(SessionConfig {
+			keys: initial_authorities.iter().map(|x| {
+				(x.0.clone(), x.0.clone(), session_keys(x.1.clone(), x.2.clone()))
+			}).collect::<Vec<_>>(),
+		}),
+		aura: Some(AuraConfig {
+			authorities: vec![],
+		}),
+		grandpa: Some(GrandpaConfig {
+			authorities: vec![],
+		}),
+		...
+	}
+}
 ```
 
 * Make sure you have the same number and order of session keys for your runtime. First in `runtime/src/lib.rs`:
 
 ```rust
 pub struct SessionKeys {
-	pub grandpa: Grandpa,
 	pub aura: Aura,
+	pub grandpa: Grandpa,
 }
 ```
 
@@ -96,10 +108,10 @@ pub struct SessionKeys {
 
 ```rust
 fn session_keys(
-	grandpa: GrandpaId,
 	aura: AuraId,
+	grandpa: GrandpaId,
 ) -> SessionKeys {
-	SessionKeys { grandpa, aura }
+	SessionKeys { aura, grandpa }
 }
 
 pub fn get_authority_keys_from_seed(seed: &str) -> (
@@ -120,6 +132,14 @@ pub fn get_authority_keys_from_seed(seed: &str) -> (
 ## Sample
 
 The usage of this pallet are demonstrated in the [Substrate permissioning sample](https://github.com/gautamdhameja/substrate-permissioning).
+
+## Additional Types for Polkadot JS Apps/API
+
+```json
+{
+  "Keys": "SessionKeys2"
+}
+```
 
 ## Disclaimer
 

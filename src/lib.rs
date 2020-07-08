@@ -1,6 +1,6 @@
 //! # Validator Set Pallet
 //!
-//! The Validator Set Pallet provides functionality to add/remove validators in a Substrate-based
+//! The Validator Set Pallet provides functionality to add/remove validators through extrinsics, in a Substrate-based
 //! PoA network.
 //! 
 //! The pallet is based on the Substrate session pallet and implements related traits for session 
@@ -55,6 +55,7 @@ decl_module! {
 		/// Add a new validator using root/sudo privileges.
 		///
 		/// New validator's session keys should be set in session module before calling this.
+		#[weight = 0]
 		pub fn add_validator(origin, validator_id: T::AccountId) -> dispatch::DispatchResult {
 			ensure_root(origin)?;
 			let mut validators = Self::validators().ok_or(Error::<T>::NoValidators)?;
@@ -70,6 +71,7 @@ decl_module! {
 		}
 
 		/// Remove a validator using root/sudo privileges.
+		#[weight = 0]
 		pub fn remove_validator(origin, validator_id: T::AccountId) -> dispatch::DispatchResult {
 			ensure_root(origin)?;
 			let mut validators = Self::validators().ok_or(Error::<T>::NoValidators)?;
@@ -111,6 +113,19 @@ impl<T: Trait> session::SessionManager<T::AccountId> for Module<T> {
 	}
 
 	fn end_session(_end_index: u32) {}
+
+	fn start_session(_start_index: u32) {}
+}
+
+impl<T: Trait> frame_support::traits::EstimateNextSessionRotation<T::BlockNumber> for Module<T> {
+	fn estimate_next_session_rotation(_now: T::BlockNumber) -> Option<T::BlockNumber> {
+		None
+	}
+
+	// The validity of this weight depends on the implementation of `estimate_next_session_rotation`
+	fn weight(_now: T::BlockNumber) -> u64 {
+		0
+	}
 }
 
 /// Implementation of Convert trait for mapping ValidatorId with AccountId.
