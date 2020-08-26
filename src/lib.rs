@@ -2,8 +2,8 @@
 //!
 //! The Validator Set Pallet provides functionality to add/remove validators through extrinsics, in a Substrate-based
 //! PoA network.
-//! 
-//! The pallet is based on the Substrate session pallet and implements related traits for session 
+//!
+//! The pallet is based on the Substrate session pallet and implements related traits for session
 //! management when validators are added or removed.
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -14,11 +14,11 @@ use frame_support::{
 	decl_event, decl_storage, decl_module, decl_error,
 	dispatch
 };
-use system::{self as system, ensure_root};
+use frame_system::ensure_root;
 use sp_runtime::traits::Convert;
 
-pub trait Trait: system::Trait + session::Trait {
-	type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
+pub trait Trait: frame_system::Trait + session::Trait {
+	type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
 }
 
 decl_storage! {
@@ -31,7 +31,7 @@ decl_storage! {
 decl_event!(
 	pub enum Event<T>
 	where
-		AccountId = <T as system::Trait>::AccountId,
+		AccountId = <T as frame_system::Trait>::AccountId,
 	{
 		// New validator added.
 		ValidatorAdded(AccountId),
@@ -75,7 +75,7 @@ decl_module! {
 		pub fn remove_validator(origin, validator_id: T::AccountId) -> dispatch::DispatchResult {
 			ensure_root(origin)?;
 			let mut validators = Self::validators().ok_or(Error::<T>::NoValidators)?;
-			// Assuming that this will be a PoA network for enterprise use-cases, 
+			// Assuming that this will be a PoA network for enterprise use-cases,
 			// the validator count may not be too big; the for loop shouldn't be too heavy.
 			// In case the validator count is large, we need to find another way.
 			for (i, v) in validators.clone().into_iter().enumerate() {

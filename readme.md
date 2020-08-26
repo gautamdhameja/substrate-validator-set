@@ -2,7 +2,7 @@
 
 A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove validators using extrinsics, in Substrate PoA networks. 
 
-**Note: Current build is compatible with Substrate [v2.0.0-rc4](https://github.com/paritytech/substrate/releases/tag/v2.0.0-rc4) release.**
+**Note: Current build is compatible with Substrate [v2.0.0-rc5](https://github.com/paritytech/substrate/releases/tag/v2.0.0-rc5) release.**
 
 ## Demo
 
