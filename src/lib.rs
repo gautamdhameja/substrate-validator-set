@@ -14,7 +14,7 @@ use frame_support::{
 	decl_event, decl_storage, decl_module, decl_error,
 	dispatch
 };
-use system::{self as system, ensure_root};
+use frame_system::{self as system, ensure_root};
 use sp_runtime::traits::Convert;
 
 pub trait Trait: system::Trait + session::Trait {
