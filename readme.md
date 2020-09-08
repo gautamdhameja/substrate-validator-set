@@ -44,6 +44,7 @@ impl session::Trait for Runtime {
 	type ValidatorId = <Self as system::Trait>::AccountId;
 	type ValidatorIdOf = validatorset::ValidatorOf<Self>;
 	type DisabledValidatorsThreshold = ();
+	type WeightInfo = ();
 }
 ```
 
