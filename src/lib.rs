@@ -17,7 +17,8 @@ use frame_support::{
 use frame_system::{self as system, ensure_root};
 use sp_runtime::traits::Convert;
 
-pub trait Trait: system::Trait + session::Trait {
+
+pub trait Trait: system::Trait + pallet_session::Trait {
 	type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
 }
 
@@ -62,7 +63,7 @@ decl_module! {
 			validators.push(validator_id.clone());
 			<Validators<T>>::put(validators);
 			// Calling rotate_session to queue the new session keys.
-			<session::Module<T>>::rotate_session();
+			<pallet_session::Module<T>>::rotate_session();
 			Self::deposit_event(RawEvent::ValidatorAdded(validator_id));
 
 			// Triggering rotate session again for the queued keys to take effect.
@@ -85,7 +86,7 @@ decl_module! {
 			}
 			<Validators<T>>::put(validators);
 			// Calling rotate_session to queue the new session keys.
-			<session::Module<T>>::rotate_session();
+			<pallet_session::Module<T>>::rotate_session();
 			Self::deposit_event(RawEvent::ValidatorRemoved(validator_id));
 
 			// Triggering rotate session again for the queued keys to take effect.
@@ -97,14 +98,14 @@ decl_module! {
 
 /// Indicates to the session module if the session should be rotated.
 /// We set this flag to true when we add/remove a validator.
-impl<T: Trait> session::ShouldEndSession<T::BlockNumber> for Module<T> {
+impl<T: Trait> pallet_session::ShouldEndSession<T::BlockNumber> for Module<T> {
 	fn should_end_session(_now: T::BlockNumber) -> bool {
 		Self::flag()
 	}
 }
 
 /// Provides the new set of validators to the session module when session is being rotated.
-impl<T: Trait> session::SessionManager<T::AccountId> for Module<T> {
+impl<T: Trait> pallet_session::SessionManager<T::AccountId> for Module<T> {
 	fn new_session(_new_index: u32) -> Option<Vec<T::AccountId>> {
 		// Flag is set to false so that the session doesn't keep rotating.
 		Flag::put(false);
