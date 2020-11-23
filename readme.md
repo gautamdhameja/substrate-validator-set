@@ -1,6 +1,6 @@
 # Substrate Validator Set
 
-A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove validators using extrinsics, in Substrate PoA networks. 
+A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove validators using extrinsics, in Substrate-based PoA networks. 
 
 **Note: Current build is compatible with Substrate [v2.0.0](https://github.com/paritytech/substrate/releases/tag/v2.0.0) release.**
 
@@ -13,7 +13,7 @@ To see this pallet in action in a Substrate runtime, watch this video - https://
 * Add the module's dependency in the `Cargo.toml` of your runtime directory. Make sure to enter the correct path or git url of the pallet as per your setup.
 
 ```toml
-[dependencies.substrate_validator_set]
+[dependencies.validatorset]
 package = 'substrate-validator-set'
 git = 'https://github.com/gautamdhameja/substrate-validator-set.git'
 default-features = false
@@ -34,7 +34,7 @@ impl validatorset::Trait for Runtime {
 * Also, declare the session pallet in  your `runtime/src/lib.rs`. The type configuration of session pallet would depend on the ValidatorSet pallet as shown below.
 
 ```rust
-impl session::Trait for Runtime {
+impl pallet_session::Trait for Runtime {
 	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
 	type ShouldEndSession = ValidatorSet;
 	type SessionManager = ValidatorSet;
@@ -58,7 +58,7 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		...
-		Session: session::{Module, Call, Storage, Event, Config<T>},
+		Session: pallet_session::{Module, Call, Storage, Event, Config<T>},
 		ValidatorSet: validatorset::{Module, Call, Storage, Event<T>, Config<T>},
 		Aura: aura::{Module, Config<T>, Inherent(Timestamp)},
 		Grandpa: grandpa::{Module, Call, Storage, Config, Event},
@@ -80,7 +80,7 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
 		validatorset: Some(ValidatorSetConfig {
 			validators: initial_authorities.iter().map(|x| x.0.clone()).collect::<Vec<_>>(),
 		}),
-		session: Some(SessionConfig {
+		pallet_session: Some(SessionConfig {
 			keys: initial_authorities.iter().map(|x| {
 				(x.0.clone(), x.0.clone(), session_keys(x.1.clone(), x.2.clone()))
 			}).collect::<Vec<_>>(),
@@ -117,13 +117,13 @@ fn session_keys(
 
 pub fn get_authority_keys_from_seed(seed: &str) -> (
 	AccountId,
-	GrandpaId,
-	AuraId
+	AuraId,
+	GrandpaId
 ) {
 	(
 		get_account_id_from_seed::<sr25519::Public>(seed),
-		get_from_seed::<GrandpaId>(seed),
-		get_from_seed::<AuraId>(seed)
+		get_from_seed::<AuraId>(seed),
+		get_from_seed::<GrandpaId>(seed)
 	)
 }
 ```
