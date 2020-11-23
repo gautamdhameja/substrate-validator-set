@@ -41,7 +41,7 @@ impl pallet_session::Trait for Runtime {
 	type Event = Event;
 	type Keys = opaque::SessionKeys;
 	type NextSessionRotation = ValidatorSet;
-	type ValidatorId = <Self as system::Trait>::AccountId;
+	type ValidatorId = <Self as frame_system::Trait>::AccountId;
 	type ValidatorIdOf = validatorset::ValidatorOf<Self>;
 	type DisabledValidatorsThreshold = ();
 	type WeightInfo = ();
