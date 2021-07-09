@@ -18,7 +18,7 @@ To see this pallet in action in a Substrate runtime, watch this video - https://
 [dependencies.validatorset]
 default-features = false
 package = 'substrate-validator-set'
-git = "https://github.com/gautamdhameja/substrate-validator-set.git",
+git = 'https://github.com/gautamdhameja/substrate-validator-set.git'
 version = '3.0.0'
 
 [dependencies.pallet-session]
