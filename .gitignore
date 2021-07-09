@@ -14,3 +14,4 @@ rls*.log
 *.orig
 *.rej
 **/wip/*.stderr
+Cargo.lock
