@@ -79,7 +79,7 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		...
-    	Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
+		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		ValidatorSet: validatorset::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Aura: pallet_aura::{Pallet, Config<T>},
