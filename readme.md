@@ -1,8 +1,8 @@
-# Substrate Validator Set
+# Substrate Validator Set Pallet
 
-A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove validators using extrinsics, in Substrate-based PoA networks. 
+A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics, in Substrate-based PoA networks. 
 
-**Note: Current build is compatible with Substrate [v3.0.0](https://github.com/paritytech/substrate/releases/tag/v3.0.0) release.**
+**Note: Current build is compatible with Substrate [monthly-2021-07](https://github.com/paritytech/substrate/releases/tag/monthly-2021-07) tag.**
 
 ## Demo
 
@@ -12,23 +12,29 @@ To see this pallet in action in a Substrate runtime, watch this video - https://
 
 * Add the module's dependency in the `Cargo.toml` of your runtime directory. Make sure to enter the correct path or git url of the pallet as per your setup.
 
+* Make sure that you also have the Substrate [session pallet](https://github.com/paritytech/substrate/tree/master/frame/session) as part of your runtime. This is because the validator-set pallet is dependent on the session pallet.
+
 ```toml
-validatorset = { 
-  version = "3.0.0", 
-  package = "substrate-validator-set", 
-  git = "https://github.com/gautamdhameja/substrate-validator-set.git", 
-  default-features = false 
-}
-pallet-session = { default-features = false, version = '3.0.0' }
-...
+[dependencies.validatorset]
+default-features = false
+package = 'substrate-validator-set'
+git = "https://github.com/gautamdhameja/substrate-validator-set.git",
+version = '3.0.0'
+
+[dependencies.pallet-session]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'monthly-2021-07'
+version = '3.0.0'
+```
+
+```toml
 std = [
     ...
     'validatorset/std',
     'sp-session/std',
 ]
 ```
-
-* Make sure that you also have the Substrate [session pallet](https://github.com/paritytech/substrate/tree/master/frame/session) as part of your runtime. This is because the validator-set pallet is based on the session pallet.
 
 * Import `OpaqueKeys` in your `runtime/src/lib.rs`.
 
@@ -73,11 +79,11 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		...
-    Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
-		Session: pallet_session::{Module, Call, Storage, Event, Config<T>},
-		ValidatorSet: validatorset::{Module, Call, Storage, Event<T>, Config<T>},
-		Aura: aura::{Module, Config<T>, Inherent(Timestamp)},
-		Grandpa: grandpa::{Module, Call, Storage, Config, Event},
+    	Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
+		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
+		ValidatorSet: validatorset::{Pallet, Call, Storage, Event<T>, Config<T>},
+		Aura: pallet_aura::{Pallet, Config<T>},
+		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event},
         ...
         ...
 	}
@@ -93,23 +99,23 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
 	_enable_println: bool) -> GenesisConfig {
 	GenesisConfig {
 		...,
-    pallet_balances: Some(BalancesConfig {
+    	balances: BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|k|(k, 1 << 60)).collect(),
-		}),
-		validatorset: Some(ValidatorSetConfig {
+		},
+		validator_set: ValidatorSetConfig {
 			validators: initial_authorities.iter().map(|x| x.0.clone()).collect::<Vec<_>>(),
-		}),
-		pallet_session: Some(SessionConfig {
+		},
+		session: SessionConfig {
 			keys: initial_authorities.iter().map(|x| {
 				(x.0.clone(), x.0.clone(), session_keys(x.1.clone(), x.2.clone()))
 			}).collect::<Vec<_>>(),
-		}),
-		aura: Some(AuraConfig {
+		},
+		aura: AuraConfig {
 			authorities: vec![],
-		}),
-		grandpa: Some(GrandpaConfig {
+		},
+		grandpa: GrandpaConfig {
 			authorities: vec![],
-		}),
+		},
 	}
 }
 ```
@@ -133,24 +139,22 @@ fn session_keys(
 	SessionKeys { aura, grandpa }
 }
 
-pub fn authority_keys_from_seed(seed: &str) -> (
+pub fn authority_keys_from_seed(s: &str) -> (
 	AccountId,
 	AuraId,
 	GrandpaId
 ) {
 	(
-		get_account_id_from_seed::<sr25519::Public>(seed),
-		get_from_seed::<AuraId>(seed),
-		get_from_seed::<GrandpaId>(seed)
+		get_account_id_from_seed::<sr25519::Public>(s),
+		get_from_seed::<AuraId>(s),
+		get_from_seed::<GrandpaId>(s)
 	)
 }
 ```
 
-* `cargo build --release` and then `cargo run --release -- --dev`
+## Run
 
-## Sample
-
-The usage of this pallet are demonstrated in the [Substrate permissioning sample](https://github.com/gautamdhameja/substrate-permissioning).
+Once you have set up the pallet in your node/node-template and everything compiles, watch this video to see how to run the chain and add validators - https://www.youtube.com/watch?v=lIYxE-tOAdw.
 
 ## Additional Types for Polkadot JS Apps/API
 

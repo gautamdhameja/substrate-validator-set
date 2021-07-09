@@ -1,6 +1,6 @@
 //! # Validator Set Pallet
 //!
-//! The Validator Set Pallet allows addition and removal of validators via extrinsics (transaction calls), in Substrate-based
+//! The Validator Set Pallet allows addition and removal of authorities/validators via extrinsics (transaction calls), in Substrate-based
 //! PoA networks.
 //!
 //! The pallet uses the Session pallet and implements related traits for session
