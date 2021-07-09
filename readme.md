@@ -99,7 +99,7 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
 	_enable_println: bool) -> GenesisConfig {
 	GenesisConfig {
 		...,
-    	balances: BalancesConfig {
+		balances: BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|k|(k, 1 << 60)).collect(),
 		},
 		validator_set: ValidatorSetConfig {
