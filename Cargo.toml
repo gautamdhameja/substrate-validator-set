@@ -6,27 +6,77 @@ edition = "2018"
 license = "Apache-2.0"
 repository = "https://github.com/gautamdhameja/substrate-validator-set"
 
-[dependencies]
-sp-std = { default-features = false, version = '3.0.0'}
-sp-runtime = { default-features = false, version = '3.0.0'}
-sp-io = { default-features = false, version = '3.0.0'}
-sp-core = { default-features = false, version = '3.0.0'}
-frame-support = { default-features = false, version = '3.0.0'}
-frame-system = { default-features = false, version = '3.0.0'}
-pallet-session = { default-features = false, version = '3.0.0'}
-serde = { features = ['derive'], optional = true, version = '1.0.101'}
-codec = { package = "parity-scale-codec", version = "2.1.1", default-features = false, features = ["derive"] }
+[dev-dependencies.serde]
+features = ['derive']
+version = '1.0.119'
+
+[dependencies.sp-core]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'monthly-2021-07'
+version = '3.0.0'
+
+[dependencies.sp-io]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'monthly-2021-07'
+version = '3.0.0'
+
+[dependencies.sp-runtime]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'monthly-2021-07'
+version = '3.0.0'
+
+[dependencies.sp-std]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'monthly-2021-07'
+version = '3.0.0'
+
+[dependencies.codec]
+default-features = false
+features = ['derive']
+package = 'parity-scale-codec'
+version = '2.0.0'
+
+[dependencies.frame-benchmarking]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+optional = true
+tag = 'monthly-2021-07'
+version = '3.1.0'
+
+[dependencies.frame-support]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'monthly-2021-07'
+version = '3.0.0'
+
+[dependencies.frame-system]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'monthly-2021-07'
+version = '3.0.0'
+
+[dependencies.pallet-session]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'monthly-2021-07'
+version = '3.0.0'
 
 [features]
 default = ['std']
+runtime-benchmarks = ['frame-benchmarking']
 std = [
     'codec/std',
-    'sp-std/std',
-    'sp-runtime/std',
+    'frame-benchmarking/std',
     'frame-support/std',
+    'frame-system/std',
     'sp-core/std',
     'sp-io/std',
-    'serde',
-    'frame-system/std',
+    'sp-std/std',
+    'sp-runtime/std',
     'pallet-session/std'
 ]
+try-runtime = ['frame-support/try-runtime']

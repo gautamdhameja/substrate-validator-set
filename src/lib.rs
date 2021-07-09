@@ -9,14 +9,14 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use sp_std::prelude::*;
-use sp_runtime::traits::Convert;
-use pallet_session::{Module as Session};
+use sp_runtime::traits::{Convert, Zero};
+use pallet_session::{Pallet as Session};
 
 pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
-    use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
+    use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
     use frame_system::pallet_prelude::*;
     use super::*;
 
@@ -85,7 +85,7 @@ pub mod pallet {
         ///
         /// New validator's session keys should be set in session module before calling this.
         #[pallet::weight(0)]
-        pub fn add_validator(origin: OriginFor<T>, validator_id: T::AccountId) -> DispatchResultWithPostInfo {
+        pub fn add_validator(origin: OriginFor<T>, validator_id: T::AccountId) -> DispatchResult {
             ensure_root(origin)?;
 
             let mut validators: Vec<T::AccountId>;
@@ -106,12 +106,12 @@ pub mod pallet {
             Flag::<T>::put(true);
 
             Self::deposit_event(Event::ValidatorAdded(validator_id));
-            Ok(().into())
+            Ok(())
         }
 
         /// Remove a validator using root/sudo privileges.
         #[pallet::weight(0)]
-        pub fn remove_validator(origin: OriginFor<T>, validator_id: T::AccountId) -> DispatchResultWithPostInfo {
+        pub fn remove_validator(origin: OriginFor<T>, validator_id: T::AccountId) -> DispatchResult {
             ensure_root(origin)?;
             let mut validators = <Validators<T>>::get().ok_or(Error::<T>::NoValidators)?;
 
@@ -132,12 +132,12 @@ pub mod pallet {
             Flag::<T>::put(true);
 
             Self::deposit_event(Event::ValidatorRemoved(validator_id));
-            Ok(().into())
+            Ok(())
         }
 
         /// Force rotate session using root/sudo privileges. 
         #[pallet::weight(0)]
-        pub fn force_rotate_session(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+        pub fn force_rotate_session(origin: OriginFor<T>) -> DispatchResult {
             ensure_root(origin)?;
             
             <pallet_session::Module<T>>::rotate_session();
@@ -145,7 +145,7 @@ pub mod pallet {
             // Triggering rotate session again for any queued keys to take effect.
             // Not sure if double rotate is needed in this scenario. **TODO**
             Flag::<T>::put(true);
-            Ok(().into())
+            Ok(())
         }
     }
 }
@@ -161,14 +161,14 @@ impl<T: Config> Pallet<T> {
 
 /// Indicates to the session module if the session should be rotated.
 /// We set this flag to true when we add/remove a validator.
-impl<T: Config> pallet_session::ShouldEndSession<T::BlockNumber> for Module<T> {
+impl<T: Config> pallet_session::ShouldEndSession<T::BlockNumber> for Pallet<T> {
     fn should_end_session(_now: T::BlockNumber) -> bool {
         Self::flag().unwrap()
     }
 }
 
 /// Provides the new set of validators to the session module when session is being rotated.
-impl<T: Config> pallet_session::SessionManager<T::AccountId> for Module<T> {
+impl<T: Config> pallet_session::SessionManager<T::AccountId> for Pallet<T> {
     fn new_session(_new_index: u32) -> Option<Vec<T::AccountId>> {
         // Flag is set to false so that the session doesn't keep rotating.
         Flag::<T>::put(false);
@@ -181,14 +181,17 @@ impl<T: Config> pallet_session::SessionManager<T::AccountId> for Module<T> {
     fn start_session(_start_index: u32) {}
 }
 
-impl<T: Config> frame_support::traits::EstimateNextSessionRotation<T::BlockNumber> for Module<T> {
-    fn estimate_next_session_rotation(_now: T::BlockNumber) -> Option<T::BlockNumber> {
-        None
+impl<T: Config> frame_support::traits::EstimateNextSessionRotation<T::BlockNumber> for Pallet<T> {
+    fn average_session_length() -> T::BlockNumber {
+        Zero::zero()
     }
 
-    // The validity of this weight depends on the implementation of `estimate_next_session_rotation`
-    fn weight(_now: T::BlockNumber) -> u64 {
-        0
+    fn estimate_current_session_progress(_now: T::BlockNumber) -> (Option<sp_runtime::Permill>, frame_support::dispatch::Weight) {
+        (None, Zero::zero())
+    }
+
+    fn estimate_next_session_rotation(_now: T::BlockNumber) -> (Option<T::BlockNumber>, frame_support::dispatch::Weight) {
+        (None, Zero::zero())
     }
 }
 
