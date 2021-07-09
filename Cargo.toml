@@ -6,32 +6,32 @@ edition = "2018"
 license = "Apache-2.0"
 repository = "https://github.com/gautamdhameja/substrate-validator-set"
 
-[dependencies.serde]
+[dev-dependencies.serde]
 features = ['derive']
 version = '1.0.119'
 
 [dependencies.sp-core]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-rev = 'd6c33e7ec313f9bd5e319dc0a5a3ace5543f9617'
+tag = 'monthly-2021-07'
 version = '3.0.0'
 
 [dependencies.sp-io]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-rev = 'd6c33e7ec313f9bd5e319dc0a5a3ace5543f9617'
+tag = 'monthly-2021-07'
 version = '3.0.0'
 
 [dependencies.sp-runtime]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-rev = 'd6c33e7ec313f9bd5e319dc0a5a3ace5543f9617'
+tag = 'monthly-2021-07'
 version = '3.0.0'
 
 [dependencies.sp-std]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-rev = 'd6c33e7ec313f9bd5e319dc0a5a3ace5543f9617'
+tag = 'monthly-2021-07'
 version = '3.0.0'
 
 [dependencies.codec]
@@ -44,36 +44,39 @@ version = '2.0.0'
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
 optional = true
-rev = 'd6c33e7ec313f9bd5e319dc0a5a3ace5543f9617'
+tag = 'monthly-2021-07'
 version = '3.1.0'
 
 [dependencies.frame-support]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-rev = 'd6c33e7ec313f9bd5e319dc0a5a3ace5543f9617'
+tag = 'monthly-2021-07'
 version = '3.0.0'
 
 [dependencies.frame-system]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-rev = 'd6c33e7ec313f9bd5e319dc0a5a3ace5543f9617'
+tag = 'monthly-2021-07'
 version = '3.0.0'
 
 [dependencies.pallet-session]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-rev = 'd6c33e7ec313f9bd5e319dc0a5a3ace5543f9617'
+tag = 'monthly-2021-07'
 version = '3.0.0'
 
 [features]
 default = ['std']
+runtime-benchmarks = ['frame-benchmarking']
 std = [
     'codec/std',
-    'sp-std/std',
-    'sp-runtime/std',
+    'frame-benchmarking/std',
     'frame-support/std',
+    'frame-system/std',
     'sp-core/std',
     'sp-io/std',
-    'frame-system/std',
+    'sp-std/std',
+    'sp-runtime/std',
     'pallet-session/std'
 ]
+try-runtime = ['frame-support/try-runtime']
