@@ -23,8 +23,11 @@ pub mod pallet {
     /// Configure the pallet by specifying the parameters and types on which it depends.
     #[pallet::config]
     pub trait Config: frame_system::Config + pallet_session::Config {
-        /// Because this pallet emits events, it depends on the runtime's definition of an event.
+        /// The Event type.
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
+        /// Origin for adding or removing a validator.
+	    type AddRemoveOrigin: EnsureOrigin<Self::Origin>;
     }
 
     #[pallet::pallet]
@@ -81,12 +84,15 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T:Config> Pallet<T> {
-        /// Add a new validator using root/sudo privileges.
+        /// Add a new validator using elevated privileges.
         ///
         /// New validator's session keys should be set in session module before calling this.
+        ///
+        /// The origin can be configured using the `AddRemoveOrigin` type in the host runtime. 
+        /// Can also be set to sudo/root.
         #[pallet::weight(0)]
         pub fn add_validator(origin: OriginFor<T>, validator_id: T::AccountId) -> DispatchResult {
-            ensure_root(origin)?;
+            T::AddRemoveOrigin::ensure_origin(origin)?;
 
             let mut validators: Vec<T::AccountId>;
 
@@ -109,10 +115,13 @@ pub mod pallet {
             Ok(())
         }
 
-        /// Remove a validator using root/sudo privileges.
+        /// Remove a validator using elevated privileges.
+        ///
+        /// The origin can be configured using the `AddRemoveOrigin` type in the host runtime. 
+        /// Can also be set to sudo/root.
         #[pallet::weight(0)]
         pub fn remove_validator(origin: OriginFor<T>, validator_id: T::AccountId) -> DispatchResult {
-            ensure_root(origin)?;
+            T::AddRemoveOrigin::ensure_origin(origin)?;
             let mut validators = <Validators<T>>::get().ok_or(Error::<T>::NoValidators)?;
 
             // Assuming that this will be a PoA network for enterprise use-cases,
@@ -135,10 +144,10 @@ pub mod pallet {
             Ok(())
         }
 
-        /// Force rotate session using root/sudo privileges. 
+        /// Force rotate session using elevated privileges.
         #[pallet::weight(0)]
         pub fn force_rotate_session(origin: OriginFor<T>) -> DispatchResult {
-            ensure_root(origin)?;
+            T::AddRemoveOrigin::ensure_origin(origin)?;
             
             <pallet_session::Module<T>>::rotate_session();
             

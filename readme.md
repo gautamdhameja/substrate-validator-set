@@ -19,7 +19,7 @@ To see this pallet in action in a Substrate runtime, watch this video - https://
 default-features = false
 package = 'substrate-validator-set'
 git = 'https://github.com/gautamdhameja/substrate-validator-set.git'
-version = '3.0.0'
+version = '3.0.1'
 
 [dependencies.pallet-session]
 default-features = false
@@ -44,11 +44,12 @@ use sp_runtime::traits::{
 };
 ```
 
-* Declare the pallet in your `runtime/src/lib.rs`.
+* Declare the pallet in your `runtime/src/lib.rs`. The pallet supports configurable origin and you can eiher set it to use one of the governance pallets (Collective, Democracy, etc.), or just use root as shown below. But **do not use a normal origin here** because the addition and removal of validators should be done using elevated privileges.
 
 ```rust
 impl validatorset::Config for Runtime {
 	type Event = Event;
+	type AddRemoveOrigin = EnsureRoot<AccountId>;
 }
 ```
 
