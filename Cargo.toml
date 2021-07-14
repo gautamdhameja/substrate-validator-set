@@ -1,10 +1,10 @@
 [package]
-name = "substrate-validator-set"
-version = "3.0.0"
-authors = ["Gautam Dhameja <quasijatt@outlook.com>"]
-edition = "2018"
-license = "Apache-2.0"
-repository = "https://github.com/gautamdhameja/substrate-validator-set"
+name = 'substrate-validator-set'
+version = '3.0.1'
+authors = ['Gautam Dhameja <quasijatt@outlook.com>']
+edition = '2018'
+license = 'Apache-2.0'
+repository = 'https://github.com/gautamdhameja/substrate-validator-set'
 
 [dev-dependencies.serde]
 features = ['derive']
