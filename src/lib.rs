@@ -27,7 +27,7 @@ pub mod pallet {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
         /// Origin for adding or removing a validator.
-	    type AddRemoveOrigin: EnsureOrigin<Self::Origin>;
+        type AddRemoveOrigin: EnsureOrigin<Self::Origin>;
     }
 
     #[pallet::pallet]
