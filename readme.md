@@ -80,7 +80,7 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		...
-		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		ValidatorSet: validatorset::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Aura: pallet_aura::{Pallet, Config<T>},
@@ -130,7 +130,7 @@ pub struct SessionKeys {
 }
 ```
 
-* And then in `src/chain_spec.rs`:
+* And then in `node/src/chain_spec.rs`:
 
 ```rust
 fn session_keys(
@@ -151,6 +151,17 @@ pub fn authority_keys_from_seed(s: &str) -> (
 		get_from_seed::<GrandpaId>(s)
 	)
 }
+```
+* And then in `node/src/chain_spec.rs` import the EnsureRoot:
+```rust
+  use frame_system::EnsureRoot;
+```
+* Import `opaque::SessionKeys, ValidatorSetConfig, SessionConfig` of `node_template_runtime` in your `node/src/chain_spec.rs`.
+```rust
+use node_template_runtime::{
+    AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
+    SudoConfig, SystemConfig, WASM_BINARY, Signature, opaque::SessionKeys, ValidatorSetConfig, SessionConfig
+};
 ```
 
 ## Run
