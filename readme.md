@@ -1,6 +1,6 @@
 # Substrate Validator Set Pallet
 
-A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics, in Substrate-based PoA networks. 
+A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics, in Substrate-based PoA networks.
 
 **Note: Current build is compatible with Substrate [monthly-2021-07](https://github.com/paritytech/substrate/releases/tag/monthly-2021-07) tag.**
 
@@ -30,9 +30,9 @@ version = '3.0.0'
 
 ```toml
 std = [
-    ...
-    'validatorset/std',
-    'sp-session/std',
+	...
+	'validatorset/std',
+	'pallet-session/std',
 ]
 ```
 
@@ -47,7 +47,7 @@ use sp_runtime::traits::{
 * Also in `runtime/src/lib.rs` import the `EnsureRoot` trait. This would change if you want to configure a custom origin (see below).
 
 ```rust
-  use frame_system::EnsureRoot;
+	use frame_system::EnsureRoot;
 ```
 
 * Declare the pallet in your `runtime/src/lib.rs`. The pallet supports configurable origin and you can eiher set it to use one of the governance pallets (Collective, Democracy, etc.), or just use root as shown below. But **do not use a normal origin here** because the addition and removal of validators should be done using elevated privileges.
@@ -91,8 +91,8 @@ construct_runtime!(
 		ValidatorSet: validatorset::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Aura: pallet_aura::{Pallet, Config<T>},
 		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event},
-        ...
-        ...
+		...
+		...
 	}
 );
 ```
@@ -162,8 +162,9 @@ pub fn authority_keys_from_seed(s: &str) -> (
 * Import `opaque::SessionKeys, ValidatorSetConfig, SessionConfig` from the runtime in `node/src/chain_spec.rs`.
 ```rust
 use node_template_runtime::{
-    AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
-    SudoConfig, SystemConfig, WASM_BINARY, Signature, opaque::SessionKeys, ValidatorSetConfig, SessionConfig
+	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
+	SudoConfig, SystemConfig, WASM_BINARY, Signature, 
+	opaque::SessionKeys, ValidatorSetConfig, SessionConfig
 };
 ```
 
@@ -171,9 +172,9 @@ use node_template_runtime::{
 
 Once you have set up the pallet in your node/node-template and everything compiles, watch this video to see how to run the chain and add validators - https://www.youtube.com/watch?v=lIYxE-tOAdw.
 
-To use the pallet with the `Collective` pallet, see the steps mentioned in [./docs/council-integration.md](./docs/council-integration.md).
+To use the pallet with the `Collective` pallet, follow the steps in [docs/council-integration.md](./docs/council-integration.md).
 
-## Additional Types for Polkadot JS Apps/API
+## Types for Polkadot JS Apps/API
 
 ```json
 {
