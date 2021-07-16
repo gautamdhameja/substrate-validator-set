@@ -44,6 +44,12 @@ use sp_runtime::traits::{
 };
 ```
 
+* Also in `runtime/src/lib.rs` import the `EnsureRoot` trait. This would change if you want to configure a custom origin (see below).
+
+```rust
+  use frame_system::EnsureRoot;
+```
+
 * Declare the pallet in your `runtime/src/lib.rs`. The pallet supports configurable origin and you can eiher set it to use one of the governance pallets (Collective, Democracy, etc.), or just use root as shown below. But **do not use a normal origin here** because the addition and removal of validators should be done using elevated privileges.
 
 ```rust
@@ -152,11 +158,8 @@ pub fn authority_keys_from_seed(s: &str) -> (
 	)
 }
 ```
-* And then in `node/src/chain_spec.rs` import the EnsureRoot:
-```rust
-  use frame_system::EnsureRoot;
-```
-* Import `opaque::SessionKeys, ValidatorSetConfig, SessionConfig` of `node_template_runtime` in your `node/src/chain_spec.rs`.
+
+* Import `opaque::SessionKeys, ValidatorSetConfig, SessionConfig` from the runtime in `node/src/chain_spec.rs`.
 ```rust
 use node_template_runtime::{
     AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
@@ -167,6 +170,8 @@ use node_template_runtime::{
 ## Run
 
 Once you have set up the pallet in your node/node-template and everything compiles, watch this video to see how to run the chain and add validators - https://www.youtube.com/watch?v=lIYxE-tOAdw.
+
+To use the pallet with the `Collective` pallet, see the steps mentioned in [./docs/council-integration.md](./docs/council-integration.md).
 
 ## Additional Types for Polkadot JS Apps/API
 
