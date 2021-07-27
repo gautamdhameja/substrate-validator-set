@@ -8,6 +8,11 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+
 use sp_std::prelude::*;
 use sp_runtime::traits::{Convert, Zero};
 use pallet_session::{Pallet as Session};
