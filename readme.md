@@ -112,9 +112,10 @@ construct_runtime!(
 > Alternatively, you can use give your pallets an explicit order by index in for your runtime, as
 > illustrated in
 > [Polkadot's runtime](https://github.com/paritytech/polkadot/blob/4767814e3d6eb8f95f2673dbe3802034d0858124/runtime/polkadot/src/lib.rs#L997-L1005)
-> to ensure any runtime upgrades retain the ordering of pallets enforced by the `construct_runtime!`
-> macro by index, not by line ordering. The index must be _less than_ `Aura` and `Grandpa` and
-> _greater than_ `Balances`.
+> to ensure any runtime upgrades retain the ordering by index of pallets configured by the
+> `construct_runtime!` macro, ignoring line ordering.
+>
+> The index must be _less than_ `Aura` and `Grandpa` and _greater than_ `Balances`.
 >
 > ```rust
 > construct_runtime!(
