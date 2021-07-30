@@ -157,13 +157,13 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
 				.map(|k| (k, 1 << 60))
 				.collect(),
 		},
-		validator_set: ValidatorSetConfig {
+		validatorset: ValidatorSetConfig {
 			validators: initial_authorities
 				.iter()
 				.map(|x| x.0.clone())
 				.collect::<Vec<_>>(),
 		},
-		session: SessionConfig {
+		pallet_session: SessionConfig {
 			keys: initial_authorities
 				.iter()
 				.map(|x| {
