@@ -1,18 +1,24 @@
 # Substrate Validator Set Pallet
 
-A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics, in Substrate-based PoA networks.
+A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators
+using extrinsics, in Substrate-based PoA networks.
 
-**Note: Current build is compatible with Substrate [monthly-2021-07](https://github.com/paritytech/substrate/releases/tag/monthly-2021-07) tag.**
+**Note: Current build is compatible with Substrate
+[monthly-2021-07](https://github.com/paritytech/substrate/releases/tag/monthly-2021-07) tag.**
 
 ## Demo
 
-To see this pallet in action in a Substrate runtime, watch this video - https://www.youtube.com/watch?v=lIYxE-tOAdw
+To see this pallet in action in a Substrate runtime, watch this video -
+https://www.youtube.com/watch?v=lIYxE-tOAdw
 
 ## Setup with Substrate Node Template
 
-* Add the module's dependency in the `Cargo.toml` of your runtime directory. Make sure to enter the correct path or git url of the pallet as per your setup.
+-   Add the module's dependency in the `Cargo.toml` of your runtime directory. Make sure to enter
+    the correct path or git url of the pallet as per your setup.
 
-* Make sure that you also have the Substrate [session pallet](https://github.com/paritytech/substrate/tree/master/frame/session) as part of your runtime. This is because the validator-set pallet is dependent on the session pallet.
+-   Make sure that you also have the Substrate
+    [session pallet](https://github.com/paritytech/substrate/tree/master/frame/session) as part of
+    your runtime. This is because the validator-set pallet is dependent on the session pallet.
 
 ```toml
 [dependencies.validatorset]
@@ -36,7 +42,7 @@ std = [
 ]
 ```
 
-* Import `OpaqueKeys` in your `runtime/src/lib.rs`.
+-   Import `OpaqueKeys` in your `runtime/src/lib.rs`.
 
 ```rust
 use sp_runtime::traits::{
@@ -44,13 +50,17 @@ use sp_runtime::traits::{
 };
 ```
 
-* Also in `runtime/src/lib.rs` import the `EnsureRoot` trait. This would change if you want to configure a custom origin (see below).
+-   Also in `runtime/src/lib.rs` import the `EnsureRoot` trait. This would change if you want to
+    configure a custom origin (see below).
 
 ```rust
 	use frame_system::EnsureRoot;
 ```
 
-* Declare the pallet in your `runtime/src/lib.rs`. The pallet supports configurable origin and you can eiher set it to use one of the governance pallets (Collective, Democracy, etc.), or just use root as shown below. But **do not use a normal origin here** because the addition and removal of validators should be done using elevated privileges.
+-   Declare the pallet in your `runtime/src/lib.rs`. The pallet supports configurable origin and you
+    can eiher set it to use one of the governance pallets (Collective, Democracy, etc.), or just use
+    root as shown below. But **do not use a normal origin here** because the addition and removal of
+    validators should be done using elevated privileges.
 
 ```rust
 impl validatorset::Config for Runtime {
@@ -59,7 +69,8 @@ impl validatorset::Config for Runtime {
 }
 ```
 
-* Also, declare the session pallet in  your `runtime/src/lib.rs`. The type configuration of session pallet would depend on the ValidatorSet pallet as shown below.
+-   Also, declare the session pallet in your `runtime/src/lib.rs`. The type configuration of session
+    pallet would depend on the ValidatorSet pallet as shown below.
 
 ```rust
 impl pallet_session::Config for Runtime {
@@ -76,7 +87,8 @@ impl pallet_session::Config for Runtime {
 }
 ```
 
-* Add both `session` and `validatorset` pallets in `construct_runtime` macro. **Make sure to add them before `Aura` and `Grandpa` pallets and after `Balances`.**
+-   Add both `session` and `validatorset` pallets in `construct_runtime` macro. **Make sure to add
+    them before `Aura` and `Grandpa` pallets and after `Balances`.**
 
 ```rust
 construct_runtime!(
@@ -97,7 +109,37 @@ construct_runtime!(
 );
 ```
 
-* Add genesis config in the `chain_spec.rs` file for `session` and `validatorset` pallets, and update it for `Aura` and `Grandpa` pallets. Because the validators are provided by the `session` pallet, we do not initialize them explicitly for `Aura` and `Grandpa` pallets. Order is important, notice that `pallet_session` is declared after `pallet_balances` since it depends on it (session accounts should have some balance).
+> Alternatively, you can use give your pallets an explicit order by index in for your runtime, as
+> illustrated in
+> [Polkadot's runtime](https://github.com/paritytech/polkadot/blob/4767814e3d6eb8f95f2673dbe3802034d0858124/runtime/polkadot/src/lib.rs#L997-L1005)
+> to ensure any runtime upgrades retain the ordering of pallets enforced by the `construct_runtime!`
+> macro by index, not by line ordering. The index must be _less than_ `Aura` and `Grandpa` and
+> _greater than_ `Balances`.
+>
+> ```rust
+> construct_runtime!(
+> 	pub enum Runtime where
+> 		Block = Block,
+> 		NodeBlock = opaque::Block,
+> 		UncheckedExtrinsic = UncheckedExtrinsic
+> 	{
+> 		...
+> 		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>} = 3,
+> 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>} = 4,
+> 		ValidatorSet: validatorset::{Pallet, Call, Storage, Event<T>, Config<T>} = 5,
+> 		Aura: pallet_aura::{Module, Config<T>} = 6,
+> 		Grandpa: pallet_grandpa::{Module, Call, Storage, Config, Event} = 7,
+> 		...
+> 		...
+> 	}
+> );
+> ```
+
+-   Add genesis config in the `chain_spec.rs` file for `session` and `validatorset` pallets, and
+    update it for `Aura` and `Grandpa` pallets. Because the validators are provided by the `session`
+    pallet, we do not initialize them explicitly for `Aura` and `Grandpa` pallets. Order is
+    important, notice that `pallet_session` is declared after `pallet_balances` since it depends on
+    it (session accounts should have some balance).
 
 ```rust
 fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
@@ -127,7 +169,8 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
 }
 ```
 
-* Make sure you have the same number and order of session keys for your runtime. First in `runtime/src/lib.rs`:
+-   Make sure you have the same number and order of session keys for your runtime. First in
+    `runtime/src/lib.rs`:
 
 ```rust
 pub struct SessionKeys {
@@ -136,7 +179,7 @@ pub struct SessionKeys {
 }
 ```
 
-* And then in `node/src/chain_spec.rs`:
+-   And then in `node/src/chain_spec.rs`:
 
 ```rust
 fn session_keys(
@@ -159,29 +202,34 @@ pub fn authority_keys_from_seed(s: &str) -> (
 }
 ```
 
-* Import `opaque::SessionKeys, ValidatorSetConfig, SessionConfig` from the runtime in `node/src/chain_spec.rs`.
+-   Import `opaque::SessionKeys, ValidatorSetConfig, SessionConfig` from the runtime in
+    `node/src/chain_spec.rs`.
+
 ```rust
 use node_template_runtime::{
 	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
-	SudoConfig, SystemConfig, WASM_BINARY, Signature, 
+	SudoConfig, SystemConfig, WASM_BINARY, Signature,
 	opaque::SessionKeys, ValidatorSetConfig, SessionConfig
 };
 ```
 
 ## Run
 
-Once you have set up the pallet in your node/node-template and everything compiles, watch this video to see how to run the chain and add validators - https://www.youtube.com/watch?v=lIYxE-tOAdw.
+Once you have set up the pallet in your node/node-template and everything compiles, watch this video
+to see how to run the chain and add validators - https://www.youtube.com/watch?v=lIYxE-tOAdw.
 
-To use the pallet with the `Collective` pallet, follow the steps in [docs/council-integration.md](./docs/council-integration.md).
+To use the pallet with the `Collective` pallet, follow the steps in
+[docs/council-integration.md](./docs/council-integration.md).
 
 ## Types for Polkadot JS Apps/API
 
 ```json
 {
-  "Keys": "SessionKeys2"
+	"Keys": "SessionKeys2"
 }
 ```
 
 ## Disclaimer
 
-This code not audited and reviewed for production use cases. You can expect bugs and security vulnerabilities. Do not use it as-is in real applications.
+This code not audited and reviewed for production use cases. You can expect bugs and security
+vulnerabilities. Do not use it as-is in real applications.
