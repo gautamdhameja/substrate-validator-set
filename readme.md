@@ -125,11 +125,11 @@ construct_runtime!(
 > 		UncheckedExtrinsic = UncheckedExtrinsic
 > 	{
 > 		...
-> 		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>} = 3,
+> 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 3,
 > 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>} = 4,
 > 		ValidatorSet: validatorset::{Pallet, Call, Storage, Event<T>, Config<T>} = 5,
-> 		Aura: pallet_aura::{Module, Config<T>} = 6,
-> 		Grandpa: pallet_grandpa::{Module, Call, Storage, Config, Event} = 7,
+> 		Aura: pallet_aura::{Pallet, Config<T>} = 6,
+> 		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event} = 7,
 > 		...
 > 		...
 > 	}
@@ -149,23 +149,39 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
 	_enable_println: bool) -> GenesisConfig {
 	GenesisConfig {
 		...,
-		balances: BalancesConfig {
-			balances: endowed_accounts.iter().cloned().map(|k|(k, 1 << 60)).collect(),
+		pallet_balances: BalancesConfig {
+			// Configure endowed accounts with initial balance of 1 << 60.
+			balances: endowed_accounts
+				.iter()
+				.cloned()
+				.map(|k| (k, 1 << 60))
+				.collect(),
 		},
 		validator_set: ValidatorSetConfig {
-			validators: initial_authorities.iter().map(|x| x.0.clone()).collect::<Vec<_>>(),
+			validators: initial_authorities
+				.iter()
+				.map(|x| x.0.clone())
+				.collect::<Vec<_>>(),
 		},
 		session: SessionConfig {
-			keys: initial_authorities.iter().map(|x| {
-				(x.0.clone(), x.0.clone(), session_keys(x.1.clone(), x.2.clone()))
-			}).collect::<Vec<_>>(),
+			keys: initial_authorities
+				.iter()
+				.map(|x| {
+					(
+						x.0.clone(),
+						x.0.clone(),
+						session_keys(x.1.clone(), x.2.clone()),
+					)
+				})
+				.collect::<Vec<_>>(),
 		},
-		aura: AuraConfig {
+		pallet_aura: AuraConfig {
 			authorities: vec![],
 		},
-		grandpa: GrandpaConfig {
+		pallet_grandpa: GrandpaConfig {
 			authorities: vec![],
 		},
+		...,
 	}
 }
 ```
@@ -174,31 +190,26 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
     `runtime/src/lib.rs`:
 
 ```rust
-pub struct SessionKeys {
-	pub aura: Aura,
-	pub grandpa: Grandpa,
-}
+	impl_opaque_keys! {
+		pub struct SessionKeys {
+			pub aura: Aura,
+			pub grandpa: Grandpa,
+		}
+	}
 ```
 
 -   And then in `node/src/chain_spec.rs`:
 
 ```rust
-fn session_keys(
-	aura: AuraId,
-	grandpa: GrandpaId,
-) -> SessionKeys {
+fn session_keys(aura: AuraId, grandpa: GrandpaId) -> SessionKeys {
 	SessionKeys { aura, grandpa }
 }
 
-pub fn authority_keys_from_seed(s: &str) -> (
-	AccountId,
-	AuraId,
-	GrandpaId
-) {
+pub fn authority_keys_from_seed(s: &str) -> (AccountId, AuraId, GrandpaId) {
 	(
 		get_account_id_from_seed::<sr25519::Public>(s),
 		get_from_seed::<AuraId>(s),
-		get_from_seed::<GrandpaId>(s)
+		get_from_seed::<GrandpaId>(s),
 	)
 }
 ```
@@ -208,9 +219,8 @@ pub fn authority_keys_from_seed(s: &str) -> (
 
 ```rust
 use node_template_runtime::{
-	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
-	SudoConfig, SystemConfig, WASM_BINARY, Signature,
-	opaque::SessionKeys, ValidatorSetConfig, SessionConfig
+	opaque::SessionKeys, AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
+	SessionConfig, Signature, SudoConfig, SystemConfig, ValidatorSetConfig, WASM_BINARY,
 };
 ```
 
