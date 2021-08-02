@@ -2,11 +2,7 @@
 
 A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics, in Substrate-based PoA networks.
 
-**Note: Current build is compatible with Substrate [monthly-2021-07](https://github.com/paritytech/substrate/releases/tag/monthly-2021-07) tag.**
-
-## Demo
-
-To see this pallet in action in a Substrate runtime, watch this video - https://www.youtube.com/watch?v=lIYxE-tOAdw
+**Note: This branch is compatible with Substrate [frontier](https://github.com/paritytech/substrate/tree/frontier) branch. This is a stop-gap solution while frontier is being updated to the latest Substrate tag/release. After that, you can just use the master or latest tag of this pallet. For using it with the [frontier node](https://github.com/paritytech/frontier/), create a node-template using the [node-template-release script](https://github.com/paritytech/frontier/blob/master/.maintain/node-template-release.sh), and then add this pallet as per the following instructions.**
 
 ## Setup with Substrate Node Template
 
