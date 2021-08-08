@@ -2,7 +2,7 @@
 
 A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics, in Substrate-based PoA networks.
 
-**Note: Current build is compatible with Substrate [monthly-2021-07](https://github.com/paritytech/substrate/releases/tag/monthly-2021-07) tag.**
+**Note: Current master is compatible with Substrate [monthly-2021-08](https://github.com/paritytech/substrate/releases/tag/monthly-2021-08) tag. For older versions, please see releases/tags.**
 
 ## Demo
 
@@ -160,6 +160,7 @@ pub fn authority_keys_from_seed(s: &str) -> (
 ```
 
 * Import `opaque::SessionKeys, ValidatorSetConfig, SessionConfig` from the runtime in `node/src/chain_spec.rs`.
+  
 ```rust
 use node_template_runtime::{
 	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
