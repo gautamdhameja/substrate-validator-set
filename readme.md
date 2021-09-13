@@ -19,13 +19,13 @@ To see this pallet in action in a Substrate runtime, watch this video - https://
 default-features = false
 package = 'substrate-validator-set'
 git = 'https://github.com/gautamdhameja/substrate-validator-set.git'
-version = '3.0.1'
+version = '4.0.0-dev'
 
 [dependencies.pallet-session]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'monthly-2021-07'
-version = '3.0.0'
+tag = 'monthly-2021-09+1'
+version = '4.0.0-dev'
 ```
 
 ```toml
