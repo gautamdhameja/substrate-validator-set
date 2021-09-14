@@ -6,7 +6,7 @@ edition = '2018'
 license = 'Apache-2.0'
 repository = 'https://github.com/gautamdhameja/substrate-validator-set'
 
-[dev-dependencies.serde]
+[dependencies.serde]
 features = ['derive']
 version = '1.0.126'
 
@@ -45,6 +45,7 @@ git = 'https://github.com/paritytech/substrate.git'
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
 
+
 [dependencies.pallet-session]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
@@ -54,13 +55,13 @@ default = ['std']
 runtime-benchmarks = ['frame-benchmarking']
 std = [
     'codec/std',
-    'frame-benchmarking/std',
     'frame-support/std',
     'frame-system/std',
     'sp-core/std',
     'sp-io/std',
     'sp-std/std',
     'sp-runtime/std',
-    'pallet-session/std'
+    'pallet-session/std',
+    'serde'
 ]
 try-runtime = ['frame-support/try-runtime']

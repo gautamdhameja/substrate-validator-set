@@ -3,9 +3,10 @@
 A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators
 using extrinsics, in Substrate-based PoA networks.
 
-**Note: Current master is compatible with Substrate
-[monthly-2021-09+1](https://github.com/paritytech/substrate/releases/tag/monthly-2021-09+1) tag. For
-older versions, please see releases/tags.**
+**Note: The current `frontier` branch in this repo is compatible with
+[Frontier master `0b962f21`](https://github.com/paritytech/frontier/commit/0b962f218f0cdd796dadfe26c3f09e68f7861b26)
+using
+[Substrate master `67f28cd`](https://github.com/paritytech/substrate/commit/67f28cdba85c362da17909c69c19952e3ef931c7). 
 
 ## Demo
 
@@ -23,17 +24,14 @@ https://www.youtube.com/watch?v=lIYxE-tOAdw
 
 ```toml
 [dependencies.validatorset]
-package = 'substrate-validator-set'
 default-features = false
-version = '4.0.0-dev'
+package = 'substrate-validator-set'
 git = 'https://github.com/gautamdhameja/substrate-validator-set.git'
 branch = 'frontier'
 
 [dependencies.pallet-session]
 default-features = false
-version = '4.0.0-dev'
 git = 'https://github.com/paritytech/substrate.git'
-rev = '67f28cdba85c362da17909c69c19952e3ef931c7' # for use with frontier rev = '0b962f218f0cdd796dadfe26c3f09e68f7861b26'
 ```
 
 ```toml

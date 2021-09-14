@@ -9,8 +9,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use sp_std::prelude::*;
-use sp_runtime::traits::{Convert, Zero};
-use pallet_session::{Pallet as Session};
+use sp_runtime::{Percent, traits::{Convert, Zero}};
+use pallet_session::{Module as Session};
 
 pub use pallet::*;
 
@@ -195,7 +195,7 @@ impl<T: Config> frame_support::traits::EstimateNextSessionRotation<T::BlockNumbe
         Zero::zero()
     }
 
-    fn estimate_current_session_progress(_now: T::BlockNumber) -> (Option<sp_runtime::Permill>, frame_support::dispatch::Weight) {
+    fn estimate_current_session_progress(_now: T::BlockNumber) -> (Option<Percent>, frame_support::dispatch::Weight) {
         (None, Zero::zero())
     }
 
