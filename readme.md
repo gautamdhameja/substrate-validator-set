@@ -3,10 +3,14 @@
 A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators
 using extrinsics, in Substrate-based PoA networks.
 
-**Note: The current `frontier` branch in this repo is compatible with
+**Note:** The current `frontier` branch in this repo is compatible with
 [Frontier master `0b962f21`](https://github.com/paritytech/frontier/commit/0b962f218f0cdd796dadfe26c3f09e68f7861b26)
 using
-[Substrate master `67f28cd`](https://github.com/paritytech/substrate/commit/67f28cdba85c362da17909c69c19952e3ef931c7). 
+[Substrate master `67f28cd`](https://github.com/paritytech/substrate/commit/67f28cdba85c362da17909c69c19952e3ef931c7).
+
+For compatability with updates upstream, you will need to manually update your project's `Cargo.lock` to use the
+correct commit from Substrate that Frontier uses. All substrate dependancies should point to the _same commit_.
+
 
 ## Demo
 
