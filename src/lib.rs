@@ -44,7 +44,6 @@ pub mod pallet {
     pub type Flag<T: Config> =  StorageValue<_, bool>;
 
     #[pallet::event]
-    #[pallet::metadata(T::AccountId = "AccountId")]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
         // New validator added.
@@ -135,7 +134,7 @@ pub mod pallet {
             <Validators<T>>::put(validators);
             
             // Calling rotate_session to queue the new session keys.
-            <pallet_session::Module<T>>::rotate_session();
+            <pallet_session::Pallet<T>>::rotate_session();
 
             // Triggering rotate session again for the queued keys to take effect.
             Flag::<T>::put(true);
@@ -149,7 +148,7 @@ pub mod pallet {
         pub fn force_rotate_session(origin: OriginFor<T>) -> DispatchResult {
             T::AddRemoveOrigin::ensure_origin(origin)?;
             
-            <pallet_session::Module<T>>::rotate_session();
+            <pallet_session::Pallet<T>>::rotate_session();
             
             // Triggering rotate session again for any queued keys to take effect.
             // Not sure if double rotate is needed in this scenario. **TODO**
