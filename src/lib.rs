@@ -8,17 +8,16 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use sp_std::prelude::*;
 use sp_runtime::traits::{Convert, Zero};
-use pallet_session::{Pallet as Session};
+use sp_std::prelude::*;
 
 pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
+    use super::*;
     use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
     use frame_system::pallet_prelude::*;
-    use super::*;
 
     /// Configure the pallet by specifying the parameters and types on which it depends.
     #[pallet::config]
@@ -37,14 +36,9 @@ pub mod pallet {
     // The pallet's storage items.
     #[pallet::storage]
     #[pallet::getter(fn validators)]
-    pub type Validators<T: Config> =  StorageValue<_, Vec<T::AccountId>>;
-
-    #[pallet::storage]
-    #[pallet::getter(fn flag)]
-    pub type Flag<T: Config> =  StorageValue<_, bool>;
+    pub type Validators<T: Config> = StorageValue<_, Vec<T::AccountId>>;
 
     #[pallet::event]
-    #[pallet::metadata(T::AccountId = "AccountId")]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
         // New validator added.
@@ -71,7 +65,9 @@ pub mod pallet {
     #[cfg(feature = "std")]
     impl<T: Config> Default for GenesisConfig<T> {
         fn default() -> Self {
-            Self { validators: Vec::new() }
+            Self {
+                validators: Vec::new(),
+            }
         }
     }
 
@@ -83,12 +79,13 @@ pub mod pallet {
     }
 
     #[pallet::call]
-    impl<T:Config> Pallet<T> {
+    impl<T: Config> Pallet<T> {
         /// Add a new validator using elevated privileges.
         ///
         /// New validator's session keys should be set in session module before calling this.
+        /// Use `author::set_keys()` RPC to set keys.
         ///
-        /// The origin can be configured using the `AddRemoveOrigin` type in the host runtime. 
+        /// The origin can be configured using the `AddRemoveOrigin` type in the host runtime.
         /// Can also be set to sudo/root.
         #[pallet::weight(0)]
         pub fn add_validator(origin: OriginFor<T>, validator_id: T::AccountId) -> DispatchResult {
@@ -105,22 +102,19 @@ pub mod pallet {
 
             <Validators<T>>::put(validators);
 
-            // Calling rotate_session to queue the new session keys.
-            Session::<T>::rotate_session();
-
-            // Triggering rotate session again for the queued keys to take effect.
-            Flag::<T>::put(true);
-
             Self::deposit_event(Event::ValidatorAdded(validator_id));
             Ok(())
         }
 
         /// Remove a validator using elevated privileges.
         ///
-        /// The origin can be configured using the `AddRemoveOrigin` type in the host runtime. 
+        /// The origin can be configured using the `AddRemoveOrigin` type in the host runtime.
         /// Can also be set to sudo/root.
         #[pallet::weight(0)]
-        pub fn remove_validator(origin: OriginFor<T>, validator_id: T::AccountId) -> DispatchResult {
+        pub fn remove_validator(
+            origin: OriginFor<T>,
+            validator_id: T::AccountId,
+        ) -> DispatchResult {
             T::AddRemoveOrigin::ensure_origin(origin)?;
             let mut validators = <Validators<T>>::get().ok_or(Error::<T>::NoValidators)?;
 
@@ -133,27 +127,8 @@ pub mod pallet {
                 }
             }
             <Validators<T>>::put(validators);
-            
-            // Calling rotate_session to queue the new session keys.
-            <pallet_session::Module<T>>::rotate_session();
-
-            // Triggering rotate session again for the queued keys to take effect.
-            Flag::<T>::put(true);
 
             Self::deposit_event(Event::ValidatorRemoved(validator_id));
-            Ok(())
-        }
-
-        /// Force rotate session using elevated privileges.
-        #[pallet::weight(0)]
-        pub fn force_rotate_session(origin: OriginFor<T>) -> DispatchResult {
-            T::AddRemoveOrigin::ensure_origin(origin)?;
-            
-            <pallet_session::Module<T>>::rotate_session();
-            
-            // Triggering rotate session again for any queued keys to take effect.
-            // Not sure if double rotate is needed in this scenario. **TODO**
-            Flag::<T>::put(true);
             Ok(())
         }
     }
@@ -161,27 +136,20 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
     fn initialize_validators(validators: &[T::AccountId]) {
-            if !validators.is_empty() {
-                assert!(<Validators<T>>::get().is_none(), "Validators are already initialized!");
-                <Validators<T>>::put(validators);
-            }
+        if !validators.is_empty() {
+            assert!(
+                <Validators<T>>::get().is_none(),
+                "Validators are already initialized!"
+            );
+            <Validators<T>>::put(validators);
+        }
     }
 }
 
-/// Indicates to the session module if the session should be rotated.
-/// We set this flag to true when we add/remove a validator.
-impl<T: Config> pallet_session::ShouldEndSession<T::BlockNumber> for Pallet<T> {
-    fn should_end_session(_now: T::BlockNumber) -> bool {
-        Self::flag().unwrap()
-    }
-}
-
-/// Provides the new set of validators to the session module when session is being rotated.
+// Provides the new set of validators to the session module when session is being rotated.
 impl<T: Config> pallet_session::SessionManager<T::AccountId> for Pallet<T> {
+    // Plan a new session and provide new validator set.
     fn new_session(_new_index: u32) -> Option<Vec<T::AccountId>> {
-        // Flag is set to false so that the session doesn't keep rotating.
-        Flag::<T>::put(false);
-
         Self::validators()
     }
 
@@ -195,18 +163,22 @@ impl<T: Config> frame_support::traits::EstimateNextSessionRotation<T::BlockNumbe
         Zero::zero()
     }
 
-    fn estimate_current_session_progress(_now: T::BlockNumber) -> (Option<sp_runtime::Permill>, frame_support::dispatch::Weight) {
+    fn estimate_current_session_progress(
+        _now: T::BlockNumber,
+    ) -> (Option<sp_runtime::Permill>, frame_support::dispatch::Weight) {
         (None, Zero::zero())
     }
 
-    fn estimate_next_session_rotation(_now: T::BlockNumber) -> (Option<T::BlockNumber>, frame_support::dispatch::Weight) {
+    fn estimate_next_session_rotation(
+        _now: T::BlockNumber,
+    ) -> (Option<T::BlockNumber>, frame_support::dispatch::Weight) {
         (None, Zero::zero())
     }
 }
 
-/// Implementation of Convert trait for mapping ValidatorId with AccountId.
-/// This is mainly used to map stash and controller keys.
-/// In this module, for simplicity, we just return the same AccountId.
+// Implementation of Convert trait for mapping ValidatorId with AccountId.
+// This is mainly used to map stash and controller keys.
+// In this module, for simplicity, we just return the same AccountId.
 pub struct ValidatorOf<T>(sp_std::marker::PhantomData<T>);
 
 impl<T: Config> Convert<T::AccountId, Option<T::AccountId>> for ValidatorOf<T> {
@@ -214,4 +186,3 @@ impl<T: Config> Convert<T::AccountId, Option<T::AccountId>> for ValidatorOf<T> {
         Some(account)
     }
 }
-

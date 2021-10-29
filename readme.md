@@ -2,7 +2,7 @@
 
 A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics, in Substrate-based PoA networks.
 
-**Note: Current master is compatible with Substrate [monthly-2021-09+1](https://github.com/paritytech/substrate/releases/tag/monthly-2021-09+1) tag. For older versions, please see releases/tags.**
+**Note: Current master is compatible with Substrate [monthly-2021-10](https://github.com/paritytech/substrate/releases/tag/monthly-2021-10) tag. For older versions, please see releases/tags.**
 
 ## Demo
 
@@ -15,7 +15,7 @@ To see this pallet in action in a Substrate runtime, watch this video - https://
 * Make sure that you also have the Substrate [session pallet](https://github.com/paritytech/substrate/tree/master/frame/session) as part of your runtime. This is because the validator-set pallet is dependent on the session pallet.
 
 ```toml
-[dependencies.validatorset]
+[dependencies.validator-set]
 default-features = false
 package = 'substrate-validator-set'
 git = 'https://github.com/gautamdhameja/substrate-validator-set.git'
@@ -31,7 +31,7 @@ version = '4.0.0-dev'
 ```toml
 std = [
 	...
-	'validatorset/std',
+	'validator-set/std',
 	'pallet-session/std',
 ]
 ```
@@ -50,10 +50,10 @@ use sp_runtime::traits::{
 	use frame_system::EnsureRoot;
 ```
 
-* Declare the pallet in your `runtime/src/lib.rs`. The pallet supports configurable origin and you can eiher set it to use one of the governance pallets (Collective, Democracy, etc.), or just use root as shown below. But **do not use a normal origin here** because the addition and removal of validators should be done using elevated privileges.
+* Declare the pallet in your `runtime/src/lib.rs`. The pallet supports configurable origin and you can either set it to use one of the governance pallets (Collective, Democracy, etc.), or just use root as shown below. But **do not use a normal origin here** because the addition and removal of validators should be done using elevated privileges.
 
 ```rust
-impl validatorset::Config for Runtime {
+impl validator_set::Config for Runtime {
 	type Event = Event;
 	type AddRemoveOrigin = EnsureRoot<AccountId>;
 }
@@ -62,21 +62,26 @@ impl validatorset::Config for Runtime {
 * Also, declare the session pallet in  your `runtime/src/lib.rs`. The type configuration of session pallet would depend on the ValidatorSet pallet as shown below.
 
 ```rust
+parameter_types! {
+	pub const Period: u32 = 2 * MINUTES;
+	pub const Offset: u32 = 0;
+}
+
 impl pallet_session::Config for Runtime {
 	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
-	type ShouldEndSession = ValidatorSet;
+	type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+	type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
 	type SessionManager = ValidatorSet;
 	type Event = Event;
 	type Keys = opaque::SessionKeys;
-	type NextSessionRotation = ValidatorSet;
 	type ValidatorId = <Self as frame_system::Config>::AccountId;
-	type ValidatorIdOf = validatorset::ValidatorOf<Self>;
+	type ValidatorIdOf = validator_set::ValidatorOf<Self>;
 	type DisabledValidatorsThreshold = ();
 	type WeightInfo = ();
 }
 ```
 
-* Add both `session` and `validatorset` pallets in `construct_runtime` macro. **Make sure to add them before `Aura` and `Grandpa` pallets and after `Balances`.**
+* Add both `session` and `validator_set` pallets in `construct_runtime` macro. **Make sure to add them before `Aura` and `Grandpa` pallets and after `Balances`.**
 
 ```rust
 construct_runtime!(
@@ -88,7 +93,7 @@ construct_runtime!(
 		...
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
-		ValidatorSet: validatorset::{Pallet, Call, Storage, Event<T>, Config<T>},
+		ValidatorSet: validator_set::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Aura: pallet_aura::{Pallet, Config<T>},
 		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event},
 		...
