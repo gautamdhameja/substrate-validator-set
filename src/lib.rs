@@ -8,7 +8,10 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use frame_support::{ensure, traits::{EstimateNextSessionRotation, Get, ValidatorSet, ValidatorSetWithIdentification}};
+use frame_support::{
+    ensure,
+    traits::{EstimateNextSessionRotation, Get, ValidatorSet, ValidatorSetWithIdentification},
+};
 pub use pallet::*;
 use sp_runtime::{
     traits::{Convert, Zero},
