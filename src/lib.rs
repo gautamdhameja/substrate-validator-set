@@ -8,15 +8,20 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use sp_runtime::traits::{Convert, Zero};
-use sp_std::prelude::*;
-
+use frame_support::{ensure, traits::{EstimateNextSessionRotation, Get, ValidatorSet, ValidatorSetWithIdentification}};
 pub use pallet::*;
+use sp_runtime::{
+    traits::{Convert, Zero},
+    DispatchError,
+};
+use sp_staking::offence::{Offence, OffenceError, ReportOffence};
+use sp_std::collections::btree_set::BTreeSet;
+use sp_std::prelude::*;
 
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
-    use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
+    use frame_support::pallet_prelude::*;
     use frame_system::pallet_prelude::*;
 
     /// Configure the pallet by specifying the parameters and types on which it depends.
@@ -27,6 +32,9 @@ pub mod pallet {
 
         /// Origin for adding or removing a validator.
         type AddRemoveOrigin: EnsureOrigin<Self::Origin>;
+
+        /// Minimum number of validators to leave in the validator set during auto removal.
+        type MinAuthorities: Get<u32>;
     }
 
     #[pallet::pallet]
@@ -36,22 +44,30 @@ pub mod pallet {
     // The pallet's storage items.
     #[pallet::storage]
     #[pallet::getter(fn validators)]
-    pub type Validators<T: Config> = StorageValue<_, Vec<T::AccountId>>;
+    pub type Validators<T: Config> = StorageValue<_, Vec<T::AccountId>, ValueQuery>;
+
+    #[pallet::storage]
+    #[pallet::getter(fn validators_to_remove)]
+    pub type ValidatorsToRemove<T: Config> = StorageValue<_, Vec<T::AccountId>, ValueQuery>;
 
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
-        // New validator added.
-        ValidatorAdded(T::AccountId),
+        /// New validator addition initiated. Effective in ~2 sessions.
+        ValidatorAdditionInitiated(T::AccountId),
 
-        // Validator removed.
-        ValidatorRemoved(T::AccountId),
+        /// Validator removal initiated. Effective in ~2 sessions.
+        ValidatorRemovalInitiated(T::AccountId),
     }
 
     // Errors inform users that something went wrong.
     #[pallet::error]
     pub enum Error<T> {
+        /// No validators available.
         NoValidators,
+
+        /// Target (post-removal) validator count is below the minimum.
+        TooLowValidatorCount,
     }
 
     #[pallet::hooks]
@@ -91,18 +107,8 @@ pub mod pallet {
         pub fn add_validator(origin: OriginFor<T>, validator_id: T::AccountId) -> DispatchResult {
             T::AddRemoveOrigin::ensure_origin(origin)?;
 
-            let mut validators: Vec<T::AccountId>;
+            Self::do_add_validator(validator_id)?;
 
-            if <Validators<T>>::get().is_none() {
-                validators = vec![validator_id.clone()];
-            } else {
-                validators = <Validators<T>>::get().unwrap();
-                validators.push(validator_id.clone());
-            }
-
-            <Validators<T>>::put(validators);
-
-            Self::deposit_event(Event::ValidatorAdded(validator_id));
             Ok(())
         }
 
@@ -116,19 +122,9 @@ pub mod pallet {
             validator_id: T::AccountId,
         ) -> DispatchResult {
             T::AddRemoveOrigin::ensure_origin(origin)?;
-            let mut validators = <Validators<T>>::get().ok_or(Error::<T>::NoValidators)?;
 
-            // Assuming that this will be a PoA network for enterprise use-cases,
-            // the validator count may not be too big; the for loop shouldn't be too heavy.
-            // In case the validator count is large, we need to find another way. **TODO**
-            for (i, v) in validators.clone().into_iter().enumerate() {
-                if v == validator_id {
-                    validators.swap_remove(i);
-                }
-            }
-            <Validators<T>>::put(validators);
+            Self::do_remove_validator(validator_id, true)?;
 
-            Self::deposit_event(Event::ValidatorRemoved(validator_id));
             Ok(())
         }
     }
@@ -136,13 +132,48 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
     fn initialize_validators(validators: &[T::AccountId]) {
-        if !validators.is_empty() {
-            assert!(
-                <Validators<T>>::get().is_none(),
-                "Validators are already initialized!"
+        assert!(
+            validators.len() > 1,
+            "At least 2 validators should be initialized"
+        );
+        assert!(
+            <Validators<T>>::get().is_empty(),
+            "Validators are already initialized!"
+        );
+        <Validators<T>>::put(validators);
+    }
+
+    fn do_add_validator(validator_id: T::AccountId) -> Result<T::AccountId, DispatchError> {
+        <Validators<T>>::mutate(|v| v.push(validator_id.clone()));
+
+        Self::deposit_event(Event::ValidatorAdditionInitiated(validator_id.clone()));
+
+        Ok(validator_id)
+    }
+
+    fn do_remove_validator(
+        validator_id: T::AccountId,
+        force_remove: bool,
+    ) -> Result<T::AccountId, DispatchError> {
+        let mut validators = <Validators<T>>::get();
+        if !force_remove {
+            // Ensuring that the post removal, target validator count doesn't go below the minimum.
+            ensure!(
+                validators.len().saturating_sub(1) as u32 >= T::MinAuthorities::get(),
+                Error::<T>::TooLowValidatorCount
             );
-            <Validators<T>>::put(validators);
         }
+
+        validators.retain(|v| *v != validator_id);
+
+        <Validators<T>>::put(validators);
+
+        Self::deposit_event(Event::ValidatorRemovalInitiated(validator_id.clone()));
+        Ok(validator_id)
+    }
+
+    fn mark_for_removal(validator_id: T::AccountId) {
+        <ValidatorsToRemove<T>>::mutate(|v| v.push(validator_id));
     }
 }
 
@@ -150,7 +181,12 @@ impl<T: Config> Pallet<T> {
 impl<T: Config> pallet_session::SessionManager<T::AccountId> for Pallet<T> {
     // Plan a new session and provide new validator set.
     fn new_session(_new_index: u32) -> Option<Vec<T::AccountId>> {
-        Self::validators()
+        let validators_to_remove: BTreeSet<_> =
+            <ValidatorsToRemove<T>>::get().into_iter().collect();
+
+        <Validators<T>>::mutate(|vs| vs.retain(|v| !validators_to_remove.contains(v)));
+
+        Some(Self::validators())
     }
 
     fn end_session(_end_index: u32) {}
@@ -158,7 +194,7 @@ impl<T: Config> pallet_session::SessionManager<T::AccountId> for Pallet<T> {
     fn start_session(_start_index: u32) {}
 }
 
-impl<T: Config> frame_support::traits::EstimateNextSessionRotation<T::BlockNumber> for Pallet<T> {
+impl<T: Config> EstimateNextSessionRotation<T::BlockNumber> for Pallet<T> {
     fn average_session_length() -> T::BlockNumber {
         Zero::zero()
     }
@@ -184,5 +220,45 @@ pub struct ValidatorOf<T>(sp_std::marker::PhantomData<T>);
 impl<T: Config> Convert<T::AccountId, Option<T::AccountId>> for ValidatorOf<T> {
     fn convert(account: T::AccountId) -> Option<T::AccountId> {
         Some(account)
+    }
+}
+
+impl<T: Config> ValidatorSet<T::AccountId> for Pallet<T> {
+    type ValidatorId = T::AccountId;
+    type ValidatorIdOf = ValidatorOf<T>;
+
+    fn session_index() -> sp_staking::SessionIndex {
+        pallet_session::Pallet::<T>::current_index()
+    }
+
+    fn validators() -> Vec<Self::ValidatorId> {
+        Self::validators()
+    }
+}
+
+impl<T: Config> ValidatorSetWithIdentification<T::AccountId> for Pallet<T> {
+    type Identification = T::AccountId;
+    type IdentificationOf = ValidatorOf<T>;
+}
+
+// Offence reporting and unresponsiveness management.
+impl<T: Config, O: Offence<(T::AccountId, T::AccountId)>>
+    ReportOffence<T::AccountId, (T::AccountId, T::AccountId), O> for Pallet<T>
+{
+    fn report_offence(_reporters: Vec<T::AccountId>, offence: O) -> Result<(), OffenceError> {
+        let offenders = offence.offenders();
+
+        for (v, _) in offenders.into_iter() {
+            Self::mark_for_removal(v);
+        }
+
+        Ok(())
+    }
+
+    fn is_known_offence(
+        _offenders: &[(T::AccountId, T::AccountId)],
+        _time_slot: &O::TimeSlot,
+    ) -> bool {
+        false
     }
 }
