@@ -66,9 +66,6 @@ pub mod pallet {
     // Errors inform users that something went wrong.
     #[pallet::error]
     pub enum Error<T> {
-        /// No validators available.
-        NoValidators,
-
         /// Target (post-removal) validator count is below the minimum.
         TooLowValidatorCount,
     }
@@ -126,7 +123,7 @@ pub mod pallet {
         ) -> DispatchResult {
             T::AddRemoveOrigin::ensure_origin(origin)?;
 
-            Self::do_remove_validator(validator_id, true)?;
+            Self::do_remove_validator(validator_id)?;
 
             Ok(())
         }
@@ -154,18 +151,14 @@ impl<T: Config> Pallet<T> {
         Ok(validator_id)
     }
 
-    fn do_remove_validator(
-        validator_id: T::AccountId,
-        force_remove: bool,
-    ) -> Result<T::AccountId, DispatchError> {
+    fn do_remove_validator(validator_id: T::AccountId) -> Result<T::AccountId, DispatchError> {
         let mut validators = <Validators<T>>::get();
-        if !force_remove {
-            // Ensuring that the post removal, target validator count doesn't go below the minimum.
-            ensure!(
-                validators.len().saturating_sub(1) as u32 >= T::MinAuthorities::get(),
-                Error::<T>::TooLowValidatorCount
-            );
-        }
+
+        // Ensuring that the post removal, target validator count doesn't go below the minimum.
+        ensure!(
+            validators.len().saturating_sub(1) as u32 >= T::MinAuthorities::get(),
+            Error::<T>::TooLowValidatorCount
+        );
 
         validators.retain(|v| *v != validator_id);
 
