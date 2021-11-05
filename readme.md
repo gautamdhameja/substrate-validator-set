@@ -10,6 +10,8 @@ To see this pallet in action in a Substrate runtime, watch this video - https://
 
 ## Setup with Substrate Node Template
 
+### Dependencies - runtime/cargo.toml
+
 * Add the module's dependency in the `Cargo.toml` of your runtime directory. Make sure to enter the correct path or git url of the pallet as per your setup.
 
 * Make sure that you also have the Substrate [session pallet](https://github.com/paritytech/substrate/tree/master/frame/session) as part of your runtime. This is because the validator-set pallet is dependent on the session pallet.
@@ -24,7 +26,7 @@ version = '4.0.0-dev'
 [dependencies.pallet-session]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'monthly-2021-09+1'
+tag = 'monthly-2021-10'
 version = '4.0.0-dev'
 ```
 
@@ -36,11 +38,13 @@ std = [
 ]
 ```
 
+### Pallet Initialization - runtime/src/lib.rs
+
 * Import `OpaqueKeys` in your `runtime/src/lib.rs`.
 
 ```rust
 use sp_runtime::traits::{
-	AccountIdLookup, BlakeTwo256, Block as BlockT, Verify, IdentifyAccount, NumberFor, OpaqueKeys
+	AccountIdLookup, BlakeTwo256, Block as BlockT, Verify, IdentifyAccount, NumberFor, OpaqueKeys,
 };
 ```
 
@@ -53,13 +57,18 @@ use sp_runtime::traits::{
 * Declare the pallet in your `runtime/src/lib.rs`. The pallet supports configurable origin and you can either set it to use one of the governance pallets (Collective, Democracy, etc.), or just use root as shown below. But **do not use a normal origin here** because the addition and removal of validators should be done using elevated privileges.
 
 ```rust
+parameter_types! {
+	pub const MinAuthorities: u32 = 2;
+}
+
 impl validator_set::Config for Runtime {
 	type Event = Event;
 	type AddRemoveOrigin = EnsureRoot<AccountId>;
+	type MinAuthorities = MinAuthorities;
 }
 ```
 
-* Also, declare the session pallet in  your `runtime/src/lib.rs`. The type configuration of session pallet would depend on the ValidatorSet pallet as shown below.
+* Also, declare the session pallet in  your `runtime/src/lib.rs`. Some of the type configuration of session pallet would depend on the ValidatorSet pallet as shown below.
 
 ```rust
 parameter_types! {
@@ -81,7 +90,7 @@ impl pallet_session::Config for Runtime {
 }
 ```
 
-* Add both `session` and `validator_set` pallets in `construct_runtime` macro. **Make sure to add them before `Aura` and `Grandpa` pallets and after `Balances`.**
+* Add `validator_set`, and `session` pallets in `construct_runtime` macro. **Make sure to add them before `Aura` and `Grandpa` pallets and after `Balances`. Also make sure that the `validator_set` pallet is added _before_ the `session` pallet, because it provides the initial validators at genesis, and must initialize first.**
 
 ```rust
 construct_runtime!(
@@ -92,14 +101,42 @@ construct_runtime!(
 	{
 		...
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		ValidatorSet: validator_set::{Pallet, Call, Storage, Event<T>, Config<T>},
+		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		Aura: pallet_aura::{Pallet, Config<T>},
 		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event},
 		...
 		...
 	}
 );
+```
+
+### Genesis config - chain_spec.rs
+
+* Import `opaque::SessionKeys, ValidatorSetConfig, SessionConfig` from the runtime in `node/src/chain_spec.rs`.
+  
+```rust
+use node_template_runtime::{
+	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
+	SudoConfig, SystemConfig, WASM_BINARY, Signature, 
+	opaque::SessionKeys, ValidatorSetConfig, SessionConfig
+};
+```
+
+* And then in `node/src/chain_spec.rs` update the key generation functions.
+
+```rust
+fn session_keys(aura: AuraId, grandpa: GrandpaId) -> SessionKeys {
+	SessionKeys { aura, grandpa }
+}
+
+pub fn authority_keys_from_seed(s: &str) -> (AccountId, AuraId, GrandpaId) {
+	(
+		get_account_id_from_seed::<sr25519::Public>(s),
+		get_from_seed::<AuraId>(s),
+		get_from_seed::<GrandpaId>(s)
+	)
+}
 ```
 
 * Add genesis config in the `chain_spec.rs` file for `session` and `validatorset` pallets, and update it for `Aura` and `Grandpa` pallets. Because the validators are provided by the `session` pallet, we do not initialize them explicitly for `Aura` and `Grandpa` pallets. Order is important, notice that `pallet_session` is declared after `pallet_balances` since it depends on it (session accounts should have some balance).
@@ -132,61 +169,27 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
 }
 ```
 
-* Make sure you have the same number and order of session keys for your runtime. First in `runtime/src/lib.rs`:
-
-```rust
-pub struct SessionKeys {
-	pub aura: Aura,
-	pub grandpa: Grandpa,
-}
-```
-
-* And then in `node/src/chain_spec.rs`:
-
-```rust
-fn session_keys(
-	aura: AuraId,
-	grandpa: GrandpaId,
-) -> SessionKeys {
-	SessionKeys { aura, grandpa }
-}
-
-pub fn authority_keys_from_seed(s: &str) -> (
-	AccountId,
-	AuraId,
-	GrandpaId
-) {
-	(
-		get_account_id_from_seed::<sr25519::Public>(s),
-		get_from_seed::<AuraId>(s),
-		get_from_seed::<GrandpaId>(s)
-	)
-}
-```
-
-* Import `opaque::SessionKeys, ValidatorSetConfig, SessionConfig` from the runtime in `node/src/chain_spec.rs`.
-  
-```rust
-use node_template_runtime::{
-	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
-	SudoConfig, SystemConfig, WASM_BINARY, Signature, 
-	opaque::SessionKeys, ValidatorSetConfig, SessionConfig
-};
-```
-
-## Run
-
-Once you have set up the pallet in your node/node-template and everything compiles, watch this video to see how to run the chain and add validators - https://www.youtube.com/watch?v=lIYxE-tOAdw.
-
-To use the pallet with the `Collective` pallet, follow the steps in [docs/council-integration.md](./docs/council-integration.md).
-
-## Types for Polkadot JS Apps/API
+### Types for Polkadot JS Apps/API
 
 ```json
 {
   "Keys": "SessionKeys2"
 }
 ```
+
+## Run
+
+Once you have set up the pallet in your node/node-template and everything compiles, watch this video to see how to run the chain and add validators - https://www.youtube.com/watch?v=lIYxE-tOAdw.
+
+## Extensions
+
+### Council-based governance
+
+Instead of using `sudo`, for a council-based governance, use the pallet with the `Collective` pallet. Follow the steps in [docs/council-integration.md](./docs/council-integration.md).
+
+### Auto-removal of offline validators
+
+When a validator goes offline, it skips its block production slot in Aura and that causes increased block times. Sometimes, we want to remove these offline validators so that the block time can recover to normal. The `ImOnline` pallet, when added to a runtime, can report offline validators and the `ValidatorSet` pallet implements the required types to integrate with `ImOnline` pallet for automatic removal of offline validators. To use the `ValidatorSet` pallet with the `ImOnline` pallet, follow the steps in [docs/im-online-integration.md](./docs/im-online-integration.md).
 
 ## Disclaimer
 
