@@ -119,6 +119,12 @@ impl pallet_im_online::Config for Runtime {
 }
 ```
 
+* Declare the `SignedPayload` type in `runtime/src/lib.rs`.
+
+```rust
+pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
+```
+
 * Add `im-online` pallet in `construct_runtime` macro.
 
 ```rust
