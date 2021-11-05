@@ -1,10 +1,13 @@
 //! # Validator Set Pallet
 //!
-//! The Validator Set Pallet allows addition and removal of authorities/validators via extrinsics (transaction calls), in Substrate-based
-//! PoA networks.
+//! The Validator Set Pallet allows addition and removal of authorities/validators
+//! via extrinsics (transaction calls), in Substrate-based PoA networks.
+//! It also integrates with the im-online pallet to automatically remove offline validators.
 //!
 //! The pallet uses the Session pallet and implements related traits for session
-//! management.
+//! management. Currently it uses periodic session rotation provided by the
+//! session pallet to automatically rotate sessions. For this reason,
+//! the validator addition and removal becomes effective only after 2 sessions (queuing + applying).
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -12,6 +15,7 @@ use frame_support::{
     ensure,
     traits::{EstimateNextSessionRotation, Get, ValidatorSet, ValidatorSetWithIdentification},
 };
+use log;
 pub use pallet::*;
 use sp_runtime::{
     traits::{Convert, Zero},
@@ -20,6 +24,8 @@ use sp_runtime::{
 use sp_staking::offence::{Offence, OffenceError, ReportOffence};
 use sp_std::collections::btree_set::BTreeSet;
 use sp_std::prelude::*;
+
+pub const LOG_TARGET: &'static str = "runtime::validator-set";
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -44,14 +50,13 @@ pub mod pallet {
     #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
 
-    // The pallet's storage items.
     #[pallet::storage]
     #[pallet::getter(fn validators)]
     pub type Validators<T: Config> = StorageValue<_, Vec<T::AccountId>, ValueQuery>;
 
     #[pallet::storage]
     #[pallet::getter(fn validators_to_remove)]
-    pub type ValidatorsToRemove<T: Config> = StorageValue<_, Vec<T::AccountId>, ValueQuery>;
+    pub type OfflineValidators<T: Config> = StorageValue<_, Vec<T::AccountId>, ValueQuery>;
 
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -75,14 +80,14 @@ pub mod pallet {
 
     #[pallet::genesis_config]
     pub struct GenesisConfig<T: Config> {
-        pub validators: Vec<T::AccountId>,
+        pub initial_validators: Vec<T::AccountId>,
     }
 
     #[cfg(feature = "std")]
     impl<T: Config> Default for GenesisConfig<T> {
         fn default() -> Self {
             Self {
-                validators: Vec::new(),
+                initial_validators: Default::default(),
             }
         }
     }
@@ -90,7 +95,7 @@ pub mod pallet {
     #[pallet::genesis_build]
     impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
         fn build(&self) {
-            Pallet::<T>::initialize_validators(&self.validators);
+            Pallet::<T>::initialize_validators(&self.initial_validators);
         }
     }
 
@@ -147,6 +152,7 @@ impl<T: Config> Pallet<T> {
         <Validators<T>>::mutate(|v| v.push(validator_id.clone()));
 
         Self::deposit_event(Event::ValidatorAdditionInitiated(validator_id.clone()));
+        log::debug!(target: LOG_TARGET, "Validator addition initiated.");
 
         Ok(validator_id)
     }
@@ -165,11 +171,34 @@ impl<T: Config> Pallet<T> {
         <Validators<T>>::put(validators);
 
         Self::deposit_event(Event::ValidatorRemovalInitiated(validator_id.clone()));
+        log::debug!(target: LOG_TARGET, "Validator removal initiated.");
+
         Ok(validator_id)
     }
 
+    // Adds offline validators to a local cache for removal at new session.
     fn mark_for_removal(validator_id: T::AccountId) {
-        <ValidatorsToRemove<T>>::mutate(|v| v.push(validator_id));
+        <OfflineValidators<T>>::mutate(|v| v.push(validator_id));
+        log::debug!(
+            target: LOG_TARGET,
+            "Offline validator marked for auto removal."
+        );
+    }
+
+    // Removes offline validators from the validator set and clears the offline cache.
+    fn remove_offline_validators() {
+        let validators_to_remove: BTreeSet<_> = <OfflineValidators<T>>::get().into_iter().collect();
+
+        // Delete from active validator set.
+        <Validators<T>>::mutate(|vs| vs.retain(|v| !validators_to_remove.contains(v)));
+        log::debug!(
+            target: LOG_TARGET,
+            "Initiated removal of {:?} offline validators.",
+            validators_to_remove.len()
+        );
+
+        // Clear the offline validator list to avoid repeated deletion.
+        <OfflineValidators<T>>::put(Vec::<T::AccountId>::new());
     }
 }
 
@@ -177,10 +206,12 @@ impl<T: Config> Pallet<T> {
 impl<T: Config> pallet_session::SessionManager<T::AccountId> for Pallet<T> {
     // Plan a new session and provide new validator set.
     fn new_session(_new_index: u32) -> Option<Vec<T::AccountId>> {
-        let validators_to_remove: BTreeSet<_> =
-            <ValidatorsToRemove<T>>::get().into_iter().collect();
+        Self::remove_offline_validators();
 
-        <Validators<T>>::mutate(|vs| vs.retain(|v| !validators_to_remove.contains(v)));
+        log::debug!(
+            target: LOG_TARGET,
+            "New session called; updated validator set provided."
+        );
 
         Some(Self::validators())
     }
@@ -210,30 +241,30 @@ impl<T: Config> EstimateNextSessionRotation<T::BlockNumber> for Pallet<T> {
 
 // Implementation of Convert trait for mapping ValidatorId with AccountId.
 // This is mainly used to map stash and controller keys.
-// In this module, for simplicity, we just return the same AccountId.
+// In this pallet, for simplicity, we just return the same AccountId.
 pub struct ValidatorOf<T>(sp_std::marker::PhantomData<T>);
 
-impl<T: Config> Convert<T::AccountId, Option<T::AccountId>> for ValidatorOf<T> {
-    fn convert(account: T::AccountId) -> Option<T::AccountId> {
+impl<T: Config> Convert<T::ValidatorId, Option<T::ValidatorId>> for ValidatorOf<T> {
+    fn convert(account: T::ValidatorId) -> Option<T::ValidatorId> {
         Some(account)
     }
 }
 
 impl<T: Config> ValidatorSet<T::AccountId> for Pallet<T> {
-    type ValidatorId = T::AccountId;
-    type ValidatorIdOf = ValidatorOf<T>;
+    type ValidatorId = T::ValidatorId;
+    type ValidatorIdOf = T::ValidatorIdOf;
 
     fn session_index() -> sp_staking::SessionIndex {
         pallet_session::Pallet::<T>::current_index()
     }
 
     fn validators() -> Vec<Self::ValidatorId> {
-        Self::validators()
+        pallet_session::Pallet::<T>::validators()
     }
 }
 
 impl<T: Config> ValidatorSetWithIdentification<T::AccountId> for Pallet<T> {
-    type Identification = T::AccountId;
+    type Identification = T::ValidatorId;
     type IdentificationOf = ValidatorOf<T>;
 }
 
