@@ -77,15 +77,13 @@ parameter_types! {
 }
 
 impl pallet_session::Config for Runtime {
-	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
+	type ValidatorId = <Self as frame_system::Config>::AccountId;
+	type ValidatorIdOf = validator_set::ValidatorOf<Self>;
 	type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
 	type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
 	type SessionManager = ValidatorSet;
-	type Event = Event;
+	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
 	type Keys = opaque::SessionKeys;
-	type ValidatorId = <Self as frame_system::Config>::AccountId;
-	type ValidatorIdOf = validator_set::ValidatorOf<Self>;
-	type DisabledValidatorsThreshold = ();
 	type WeightInfo = ();
 }
 ```
