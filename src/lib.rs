@@ -11,6 +11,9 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+mod mock;
+mod tests;
+
 use frame_support::{
 	ensure,
 	traits::{EstimateNextSessionRotation, Get, ValidatorSet, ValidatorSetWithIdentification},
