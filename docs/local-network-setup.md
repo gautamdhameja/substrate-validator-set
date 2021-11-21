@@ -55,7 +55,7 @@ In the Network Explorer you should see that `Alice` and `Bob` are producing bloc
 From `Charlie` node connected Polkadot JS Apps instance, make an RPC call `author - rotate_keys`. This will print public session keys for `Charlie` node.
 
 <br />
-<img src="./img/rotate-keys.png" alt="rotate-keys" width="600"/>
+<img src="./img/rotate-keys.png" alt="rotate-keys" />
 
 ### Step 6
 
@@ -64,14 +64,14 @@ Use the string obtained in Step 5 above in the `keys: NodeTemplateRuntimeOpaqueS
 Put `0x` in the `proof` input.
 
 <br />
-<img src="./img/set-keys.png" alt="set-keys" width="600"/>
+<img src="./img/set-keys.png" alt="set-keys" />
 
 ### Step 7
 
 Finally, add `Charlie` as a validator by calling the `add_validator` extrinsic of the Validator Set pallet using `sudo`. Alice is set as the sudo key in node template.
 
 <br />
-<img src="./img/add-validator.png" alt="add-validator" width="600"/>
+<img src="./img/add-validator.png" alt="add-validator" />
 
 ### Step 8
 
