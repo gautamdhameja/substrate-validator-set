@@ -12,7 +12,7 @@
 [dependencies.pallet-im-online]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'monthly-2021-10'
+tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 ```
 
@@ -246,4 +246,4 @@ When using the `ImOnline` pallet, update the Polkadot JS custom types to the fol
 
 ## Run
 
-To run the node and network, follow the instructions as demonstrated in the video [here](https://www.youtube.com/watch?v=lIYxE-tOAdw).
+To run the node and network, follow the steps in [docs/local-network-setup.md](./local-network-setup.md).

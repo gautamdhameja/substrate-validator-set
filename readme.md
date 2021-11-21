@@ -151,7 +151,7 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
 			balances: endowed_accounts.iter().cloned().map(|k|(k, 1 << 60)).collect(),
 		},
 		validator_set: ValidatorSetConfig {
-			validators: initial_authorities.iter().map(|x| x.0.clone()).collect::<Vec<_>>(),
+			initial_validators: initial_authorities.iter().map(|x| x.0.clone()).collect::<Vec<_>>(),
 		},
 		session: SessionConfig {
 			keys: initial_authorities.iter().map(|x| {
@@ -178,7 +178,8 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
 
 ## Run
 
-Once you have set up the pallet in your node/node-template and everything compiles, watch this video to see how to run the chain and add validators - https://www.youtube.com/watch?v=lIYxE-tOAdw.
+Once you have set up the pallet in your node/node-template and everything compiles, follow the steps in [docs/local-network-setup.md](./docs/local-network-setup.md) to run a local network and add validators.
+Also, watch this video to see this in action - https://www.youtube.com/watch?v=lIYxE-tOAdw.
 
 ## Extensions
 
