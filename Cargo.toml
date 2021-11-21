@@ -1,8 +1,8 @@
 [package]
 name = 'substrate-validator-set'
-version = '3.0.1'
+version = '4.0.0-dev'
 authors = ['Gautam Dhameja <quasijatt@outlook.com>']
-edition = '2018'
+edition = '2021'
 license = 'Apache-2.0'
 repository = 'https://github.com/gautamdhameja/substrate-validator-set'
 
@@ -20,31 +20,41 @@ version = '3.0.0'
 
 [dev-dependencies.serde]
 features = ['derive']
-version = '1.0.119'
+version = '1.0.126'
 
 [dependencies.sp-core]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'monthly-2021-07'
-version = '3.0.0'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
 
 [dependencies.sp-io]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'monthly-2021-07'
-version = '3.0.0'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
 
 [dependencies.sp-runtime]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'monthly-2021-07'
-version = '3.0.0'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
 
 [dependencies.sp-std]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'monthly-2021-07'
-version = '3.0.0'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.sp-staking]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.log]
+default-features = false
+version = '0.4.14'
 
 [dependencies.codec]
 default-features = false
@@ -56,26 +66,32 @@ version = '2.0.0'
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
 optional = true
-tag = 'monthly-2021-07'
-version = '3.1.0'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
 
 [dependencies.frame-support]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'monthly-2021-07'
-version = '3.0.0'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
 
 [dependencies.frame-system]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'monthly-2021-07'
-version = '3.0.0'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
 
 [dependencies.pallet-session]
 default-features = false
+features = ['historical']
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'monthly-2021-07'
-version = '3.0.0'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.scale-info]
+default-features = false
+features = ['derive']
+version = '1.0'
 
 [features]
 default = ['std']
@@ -85,6 +101,7 @@ std = [
     'frame-benchmarking/std',
     'frame-support/std',
     'frame-system/std',
+    'scale-info/std',
     'sp-core/std',
     'sp-io/std',
     'sp-std/std',
