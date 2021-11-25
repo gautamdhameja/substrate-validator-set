@@ -181,6 +181,10 @@ impl<T: Config> Pallet<T> {
 	}
 
 	// Removes offline validators from the validator set and clears the offline cache.
+	// It is called in the session change hook and removes the validators who were reported offline
+	// during the session that is ending. We do not check for `MinAuthorities` here, because the
+	// offline validators will not produce blocks and will have the same overall effect on the
+	// runtime.
 	fn remove_offline_validators() {
 		let validators_to_remove: BTreeSet<_> = <OfflineValidators<T>>::get().into_iter().collect();
 
@@ -201,6 +205,8 @@ impl<T: Config> Pallet<T> {
 impl<T: Config> pallet_session::SessionManager<T::AccountId> for Pallet<T> {
 	// Plan a new session and provide new validator set.
 	fn new_session(_new_index: u32) -> Option<Vec<T::AccountId>> {
+		// Remove any offline validators.
+		// This will only work when the runtime also has the im-online pallet.
 		Self::remove_offline_validators();
 
 		log::debug!(target: LOG_TARGET, "New session called; updated validator set provided.");
@@ -232,8 +238,6 @@ impl<T: Config> EstimateNextSessionRotation<T::BlockNumber> for Pallet<T> {
 }
 
 // Implementation of Convert trait for mapping ValidatorId with AccountId.
-// This is mainly used to map stash and controller keys.
-// In this pallet, for simplicity, we just return the same AccountId.
 pub struct ValidatorOf<T>(sp_std::marker::PhantomData<T>);
 
 impl<T: Config> Convert<T::ValidatorId, Option<T::ValidatorId>> for ValidatorOf<T> {
