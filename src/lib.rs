@@ -172,6 +172,7 @@ impl<T: Config> Pallet<T> {
 		assert!(validators.len() > 1, "At least 2 validators should be initialized");
 		assert!(<Validators<T>>::get().is_empty(), "Validators are already initialized!");
 		<Validators<T>>::put(validators);
+		<ApprovedValidators<T>>::put(validators);
 	}
 
 	fn do_add_validator(validator_id: T::AccountId) -> DispatchResult {
