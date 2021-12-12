@@ -2,7 +2,7 @@
 
 A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics, in Substrate-based PoA networks.
 
-**Note: Current master is compatible with Substrate [monthly-2021-11-1](https://github.com/paritytech/substrate/releases/tag/monthly-2021-11-1) tag. For older versions, please see releases/tags.**
+**Note: Current master is compatible with Substrate [monthly-2021-12](https://github.com/paritytech/substrate/releases/tag/monthly-2021-12) tag. For older versions, please see releases/tags.**
 
 ## Demo
 
@@ -26,7 +26,7 @@ version = '4.0.0-dev'
 [dependencies.pallet-session]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-tag = 'monthly-2021-11-1'
+tag = 'monthly-2021-12'
 version = '4.0.0-dev'
 ```
 
