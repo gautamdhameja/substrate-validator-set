@@ -36,8 +36,9 @@ type EnsureRootOrHalfCouncil = EnsureOneOf<
 3. Configure the custom origin for the Validator Set pallet.
 
 ```rust
-impl validatorset::Config for Runtime {
+impl validator_set::Config for Runtime {
 	type Event = Event;
+	type MinAuthorities = MinAuthorities; // see readme for type declaration
 	type AddRemoveOrigin = EnsureRootOrHalfCouncil;
 }
 ```
