@@ -207,6 +207,8 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn approve_validator(validator_id: T::AccountId) -> DispatchResult {
+		let approved_set: BTreeSet<_> = <ApprovedValidators<T>>::get().into_iter().collect();
+		ensure!(!approved_set.contains(&validator_id), Error::<T>::Duplicate);
 		<ApprovedValidators<T>>::mutate(|v| v.push(validator_id.clone()));
 		Ok(())
 	}
