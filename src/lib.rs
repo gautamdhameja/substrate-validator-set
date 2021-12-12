@@ -114,8 +114,8 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		/// Add a new validator.
 		///
-		/// New validator's session keys should be set in session module before
-		/// calling this. Use `author::set_keys()` RPC to set keys.
+		/// New validator's session keys should be set in Session pallet before
+		/// calling this.
 		///
 		/// The origin can be configured using the `AddRemoveOrigin` type in the
 		/// host runtime. Can also be set to sudo/root.
