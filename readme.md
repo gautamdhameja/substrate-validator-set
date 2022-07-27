@@ -1,6 +1,6 @@
 # Substrate Validator Set Pallet
 
-A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics, in Substrate-based PoA networks.
+A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics in PoA networks.
 
 **Note: Current master is compatible with Substrate [polkadot-v0.9.23](https://github.com/paritytech/substrate/tree/polkadot-v0.9.23) branch. For older versions, please see releases/tags.**
 
@@ -192,4 +192,4 @@ When a validator goes offline, it skips its block production slot in Aura and th
 
 ## Disclaimer
 
-This code not audited and reviewed for production use cases. You can expect bugs and security vulnerabilities. Do not use it as-is in real applications.
+This code is **not audited and reviewed** for production use cases. You can expect bugs and security vulnerabilities. Do not use it as-is in real applications.
