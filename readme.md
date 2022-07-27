@@ -2,7 +2,7 @@
 
 A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics, in Substrate-based PoA networks.
 
-**Note: Current master is compatible with Substrate [polkadot-v0.9.22](https://github.com/paritytech/substrate/tree/polkadot-v0.9.22) branch. For older versions, please see releases/tags.**
+**Note: Current master is compatible with Substrate [polkadot-v0.9.23](https://github.com/paritytech/substrate/tree/polkadot-v0.9.23) branch. For older versions, please see releases/tags.**
 
 ## Demo
 
@@ -21,12 +21,12 @@ To see this pallet in action in a Substrate runtime, watch this video - https://
 default-features = false
 package = 'substrate-validator-set'
 git = 'https://github.com/gautamdhameja/substrate-validator-set.git'
-version = '0.9.22'
+version = '0.9.23'
 
 [dependencies.pallet-session]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.22'
+branch = 'polkadot-v0.9.23'
 ```
 
 ```toml
