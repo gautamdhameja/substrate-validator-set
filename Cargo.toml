@@ -1,6 +1,6 @@
 [package]
 name = 'substrate-validator-set'
-version = '0.9.22'
+version = '0.9.27'
 authors = ['Gautam Dhameja <quasijatt@outlook.com>']
 edition = '2021'
 license = 'Apache-2.0'
@@ -13,27 +13,27 @@ version = '1.0.126'
 [dependencies.sp-core]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.23'
+branch = 'polkadot-v0.9.27'
 
 [dependencies.sp-io]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.23'
+branch = 'polkadot-v0.9.27'
 
 [dependencies.sp-runtime]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.23'
+branch = 'polkadot-v0.9.27'
 
 [dependencies.sp-std]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.23'
+branch = 'polkadot-v0.9.27'
 
 [dependencies.sp-staking]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.23'
+branch = 'polkadot-v0.9.27'
 
 [dependencies.log]
 default-features = false
@@ -43,29 +43,29 @@ version = '0.4.17'
 default-features = false
 features = ['derive']
 package = 'parity-scale-codec'
-version = '3.1.2'
+version = '3.0.0'
 
 [dependencies.frame-benchmarking]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
 optional = true
-branch = 'polkadot-v0.9.23'
+branch = 'polkadot-v0.9.27'
 
 [dependencies.frame-support]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.23'
+branch = 'polkadot-v0.9.27'
 
 [dependencies.frame-system]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.23'
+branch = 'polkadot-v0.9.27'
 
 [dependencies.pallet-session]
 default-features = false
 features = ['historical']
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.23'
+branch = 'polkadot-v0.9.27'
 
 [dependencies.scale-info]
 default-features = false
@@ -73,7 +73,7 @@ features = ['derive']
 version = '2.1.1'
 
 [dependencies.syn]
-version = "=1.0.96"
+version = '1.0.98'
 
 [features]
 default = ['std']
