@@ -2,7 +2,7 @@
 
 A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics in PoA networks.
 
-**Note: Current master is compatible with Substrate [polkadot-v0.9.27](https://github.com/paritytech/substrate/tree/polkadot-v0.9.27) branch. For older versions, please see releases/tags.**
+**Note: Current master is compatible with Substrate [polkadot-v0.9.30](https://github.com/paritytech/substrate/tree/polkadot-v0.9.30) branch. For older versions, please see releases/tags.**
 
 ## Demo
 
@@ -21,12 +21,12 @@ To see this pallet in action in a Substrate runtime, watch this video - https://
 default-features = false
 package = 'substrate-validator-set'
 git = 'https://github.com/gautamdhameja/substrate-validator-set.git'
-version = '0.9.23'
+version = '0.9.30'
 
 [dependencies.pallet-session]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.27'
+branch = 'polkadot-v0.9.30'
 ```
 
 ```toml
@@ -61,7 +61,7 @@ parameter_types! {
 }
 
 impl validator_set::Config for Runtime {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type AddRemoveOrigin = EnsureRoot<AccountId>;
 	type MinAuthorities = MinAuthorities;
 }
@@ -76,6 +76,7 @@ parameter_types! {
 }
 
 impl pallet_session::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
 	type ValidatorId = <Self as frame_system::Config>::AccountId;
 	type ValidatorIdOf = validator_set::ValidatorOf<Self>;
 	type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
@@ -84,7 +85,6 @@ impl pallet_session::Config for Runtime {
 	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
 	type Keys = opaque::SessionKeys;
 	type WeightInfo = ();
-	type Event = Event;
 }
 ```
 
@@ -98,11 +98,11 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		...
-		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		ValidatorSet: validator_set::{Pallet, Call, Storage, Event<T>, Config<T>},
-		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
-		Aura: pallet_aura::{Pallet, Config<T>},
-		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event},
+		Balances: pallet_balances,
+		ValidatorSet: validator_set,
+		Session: pallet_session,
+		Aura: pallet_aura,
+		Grandpa: pallet_grandpa,
 		...
 		...
 	}

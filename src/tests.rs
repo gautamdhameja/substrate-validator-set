@@ -3,7 +3,7 @@
 #![cfg(test)]
 
 use super::*;
-use crate::mock::{authorities, new_test_ext, Origin, Session, Test, ValidatorSet};
+use crate::mock::{authorities, new_test_ext, RuntimeOrigin, Session, Test, ValidatorSet};
 use frame_support::{assert_noop, assert_ok, pallet_prelude::*};
 use sp_runtime::testing::UintAuthorityId;
 
@@ -19,7 +19,7 @@ fn simple_setup_should_work() {
 #[test]
 fn add_validator_updates_validators_list() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(ValidatorSet::add_validator(Origin::root(), 4));
+		assert_ok!(ValidatorSet::add_validator(RuntimeOrigin::root(), 4));
 		assert_eq!(ValidatorSet::validators(), vec![1u64, 2u64, 3u64, 4u64])
 	});
 }
@@ -27,7 +27,7 @@ fn add_validator_updates_validators_list() {
 #[test]
 fn remove_validator_updates_validators_list() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(ValidatorSet::remove_validator(Origin::root(), 2));
+		assert_ok!(ValidatorSet::remove_validator(RuntimeOrigin::root(), 2));
 		assert_eq!(ValidatorSet::validators(), vec![1u64, 3u64]);
 	});
 }
@@ -35,7 +35,7 @@ fn remove_validator_updates_validators_list() {
 #[test]
 fn add_validator_fails_with_invalid_origin() {
 	new_test_ext().execute_with(|| {
-		assert_noop!(ValidatorSet::add_validator(Origin::signed(1), 4), DispatchError::BadOrigin);
+		assert_noop!(ValidatorSet::add_validator(RuntimeOrigin::signed(1), 4), DispatchError::BadOrigin);
 	});
 }
 
@@ -43,7 +43,7 @@ fn add_validator_fails_with_invalid_origin() {
 fn remove_validator_fails_with_invalid_origin() {
 	new_test_ext().execute_with(|| {
 		assert_noop!(
-			ValidatorSet::remove_validator(Origin::signed(1), 4),
+			ValidatorSet::remove_validator(RuntimeOrigin::signed(1), 4),
 			DispatchError::BadOrigin
 		);
 	});
@@ -52,8 +52,8 @@ fn remove_validator_fails_with_invalid_origin() {
 #[test]
 fn duplicate_check() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(ValidatorSet::add_validator(Origin::root(), 4));
+		assert_ok!(ValidatorSet::add_validator(RuntimeOrigin::root(), 4));
 		assert_eq!(ValidatorSet::validators(), vec![1u64, 2u64, 3u64, 4u64]);
-		assert_noop!(ValidatorSet::add_validator(Origin::root(), 4), Error::<Test>::Duplicate);
+		assert_noop!(ValidatorSet::add_validator(RuntimeOrigin::root(), 4), Error::<Test>::Duplicate);
 	});
 }
