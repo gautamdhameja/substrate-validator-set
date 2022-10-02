@@ -12,7 +12,7 @@
 [dependencies.pallet-im-online]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.27'
+branch = 'polkadot-v0.9.30'
 ```
 
 ```toml
@@ -106,7 +106,7 @@ where
 
 impl pallet_im_online::Config for Runtime {
 	type AuthorityId = ImOnlineId;
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
 	type ValidatorSet = ValidatorSet;
 	type ReportUnresponsiveness = ValidatorSet;
@@ -134,12 +134,12 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		...
-		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		ValidatorSet: validator_set::{Pallet, Call, Storage, Event<T>, Config<T>},
-		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
-		ImOnline: pallet_im_online::{Pallet, Call, Storage, Event<T>, ValidateUnsigned, Config<T>},
-		Aura: pallet_aura::{Pallet, Config<T>},
-		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event},
+		Balances: pallet_balances,
+		ValidatorSet: validator_set,
+		Session: pallet_session,
+		ImOnline: pallet_im_online,
+		Aura: pallet_aura,
+		Grandpa: pallet_grandpa,
 		...
 		...
 	}
@@ -154,7 +154,7 @@ construct_runtime!(
 [dependencies.pallet-im-online]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.27'
+branch = 'polkadot-v0.9.30'
 ```
 
 * Import `ImOnlineId` in the `chain_spec.rs`.

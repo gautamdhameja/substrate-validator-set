@@ -12,9 +12,9 @@ parameter_types! {
 }
 
 impl pallet_collective::Config for Runtime {
-	type Origin = Origin;
-	type Proposal = Call;
-	type Event = Event;
+	type RuntimeOrigin = RuntimeOrigin;
+	type Proposal = RuntimeCall;
+	type RuntimeEvent = RuntimeEvent;
 	type MotionDuration = CouncilMotionDuration;
 	type MaxProposals = CouncilMaxProposals;
 	type MaxMembers = CouncilMaxMembers;
@@ -37,7 +37,7 @@ type EnsureRootOrHalfCouncil = EnsureOneOf<
 
 ```rust
 impl validator_set::Config for Runtime {
-	type Event = Event;
+	type RuntimeEvent = RuntimeEvent;
 	type MinAuthorities = MinAuthorities; // see readme for type declaration
 	type AddRemoveOrigin = EnsureRootOrHalfCouncil;
 }
