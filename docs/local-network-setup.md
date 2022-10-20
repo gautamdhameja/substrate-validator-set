@@ -12,7 +12,7 @@ The node template comes with two predefined chain configurations - `dev` and `lo
 Run the `Alice` validator:
 
 ```bash
-./target/release/node-template --chain=local --alice --base-path=~/tmp/a --port=30334 --ws-port 9944 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external
+./target/release/node-template --chain=local --alice --base-path /tmp/a --port=30334 --ws-port 9944 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external
 ```
 
 Note that we have provided --chain=local, and custom values for base-path, port, ws-port. These custom value are used to avoid conflicts when running all nodes on local machine. If you are running nodes on separate servers, you can leave these as defaults.
@@ -34,13 +34,13 @@ In this case, `12D3KooWQXBxhGvmbcb8siLZWf7bNzv3KrzEXhi9t2VbDGP57zR9` is the node
 Next, run the `Bob` and `Charlie` nodes:
 
 ```bash
-./target/release/node-template --chain=local --bob --base-path=~/tmp/b --port=30335 --ws-port 9945 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external --bootnodes /ip4/127.0.0.1/tcp/30334/p2p/12D3KooWQXBxhGvmbcb8siLZWf7bNzv3KrzEXhi9t2VbDGP57zR9
+./target/release/node-template --chain=local --bob --base-path /tmp/b --port=30335 --ws-port 9945 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external --bootnodes /ip4/127.0.0.1/tcp/30334/p2p/12D3KooWQXBxhGvmbcb8siLZWf7bNzv3KrzEXhi9t2VbDGP57zR9
 ```
 
 and,
 
 ```bash
-./target/release/node-template --chain=local --charlie --base-path=~/tmp/c --port=30336 --ws-port 9946 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external --bootnodes /ip4/127.0.0.1/tcp/30334/p2p/12D3KooWQXBxhGvmbcb8siLZWf7bNzv3KrzEXhi9t2VbDGP57zR9
+./target/release/node-template --chain=local --charlie --base-path /tmp/c --port=30336 --ws-port 9946 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external --bootnodes /ip4/127.0.0.1/tcp/30334/p2p/12D3KooWQXBxhGvmbcb8siLZWf7bNzv3KrzEXhi9t2VbDGP57zR9
 ```
 
 As you can see, we have added an additional parameter when running `Bob` and `Charlie` nodes to provide a bootnode. The bootnodes parameter has the `Alice` node's identity. You should replace it with what you get in Step 2 above.
