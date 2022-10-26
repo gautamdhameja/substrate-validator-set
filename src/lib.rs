@@ -157,9 +157,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(who == validator_id, Error::<T>::BadOrigin);
-
-			let approved_set: BTreeSet<_> = <ApprovedValidators<T>>::get().into_iter().collect();
-			ensure!(approved_set.contains(&validator_id), Error::<T>::ValidatorNotApproved);
+			ensure!(<ApprovedValidators<T>>::get().contains(&validator_id), Error::<T>::ValidatorNotApproved);
 
 			Self::do_add_validator(validator_id)?;
 
@@ -178,8 +176,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn do_add_validator(validator_id: T::AccountId) -> DispatchResult {
-		let validator_set: BTreeSet<_> = <Validators<T>>::get().into_iter().collect();
-		ensure!(!validator_set.contains(&validator_id), Error::<T>::Duplicate);
+		ensure!(!<Validators<T>>::get().contains(&validator_id), Error::<T>::Duplicate);
 		<Validators<T>>::mutate(|v| v.push(validator_id.clone()));
 
 		Self::deposit_event(Event::ValidatorAdditionInitiated(validator_id.clone()));
@@ -209,8 +206,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn approve_validator(validator_id: T::AccountId) -> DispatchResult {
-		let approved_set: BTreeSet<_> = <ApprovedValidators<T>>::get().into_iter().collect();
-		ensure!(!approved_set.contains(&validator_id), Error::<T>::Duplicate);
+		ensure!(!<ApprovedValidators<T>>::get().contains(&validator_id), Error::<T>::Duplicate);
 		<ApprovedValidators<T>>::mutate(|v| v.push(validator_id.clone()));
 		Ok(())
 	}
