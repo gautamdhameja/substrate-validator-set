@@ -12,7 +12,7 @@
 [dependencies.pallet-im-online]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.30'
+branch = 'polkadot-v0.9.31'
 ```
 
 ```toml
@@ -154,7 +154,7 @@ construct_runtime!(
 [dependencies.pallet-im-online]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.30'
+branch = 'polkadot-v0.9.31'
 ```
 
 * Import `ImOnlineId` in the `chain_spec.rs`.
