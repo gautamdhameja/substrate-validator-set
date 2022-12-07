@@ -2,7 +2,7 @@
 
 A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators using extrinsics in PoA networks.
 
-**Note: Current master is compatible with Substrate [polkadot-v0.9.32](https://github.com/paritytech/substrate/tree/polkadot-v0.9.32) branch. For older versions, please see releases/tags.**
+**Note: Current master is compatible with Substrate [polkadot-v0.9.33](https://github.com/paritytech/substrate/tree/polkadot-v0.9.33) branch. For older versions, please see releases/tags.**
 
 ## Demo
 
