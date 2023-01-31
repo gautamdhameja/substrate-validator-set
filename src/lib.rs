@@ -120,6 +120,7 @@ pub mod pallet {
 		///
 		/// The origin can be configured using the `AddRemoveOrigin` type in the
 		/// host runtime. Can also be set to sudo/root.
+		#[pallet::call_index(0)]
 		#[pallet::weight(0)]
 		pub fn add_validator(origin: OriginFor<T>, validator_id: T::AccountId) -> DispatchResult {
 			T::AddRemoveOrigin::ensure_origin(origin)?;
@@ -134,6 +135,7 @@ pub mod pallet {
 		///
 		/// The origin can be configured using the `AddRemoveOrigin` type in the
 		/// host runtime. Can also be set to sudo/root.
+		#[pallet::call_index(1)]
 		#[pallet::weight(0)]
 		pub fn remove_validator(
 			origin: OriginFor<T>,
@@ -150,6 +152,7 @@ pub mod pallet {
 		/// Add an approved validator again when it comes back online.
 		///
 		/// For this call, the dispatch origin must be the validator itself.
+		#[pallet::call_index(2)]
 		#[pallet::weight(0)]
 		pub fn add_validator_again(
 			origin: OriginFor<T>,
