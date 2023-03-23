@@ -160,7 +160,10 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(who == validator_id, Error::<T>::BadOrigin);
-			ensure!(<ApprovedValidators<T>>::get().contains(&validator_id), Error::<T>::ValidatorNotApproved);
+			ensure!(
+				<ApprovedValidators<T>>::get().contains(&validator_id),
+				Error::<T>::ValidatorNotApproved
+			);
 
 			Self::do_add_validator(validator_id)?;
 
@@ -171,7 +174,10 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
 	fn initialize_validators(validators: &[T::AccountId]) {
-		assert!(validators.len() as u32 >= T::MinAuthorities::get(), "Initial set of validators must be at least T::MinAuthorities");
+		assert!(
+			validators.len() as u32 >= T::MinAuthorities::get(),
+			"Initial set of validators must be at least T::MinAuthorities"
+		);
 		assert!(<Validators<T>>::get().is_empty(), "Validators are already initialized!");
 
 		<Validators<T>>::put(validators);
@@ -217,6 +223,7 @@ impl<T: Config> Pallet<T> {
 	fn unapprove_validator(validator_id: T::AccountId) -> DispatchResult {
 		let mut approved_set = <ApprovedValidators<T>>::get();
 		approved_set.retain(|v| *v != validator_id);
+		<ApprovedValidators<T>>::set(approved_set);
 		Ok(())
 	}
 
