@@ -35,7 +35,10 @@ fn remove_validator_updates_validators_list() {
 #[test]
 fn add_validator_fails_with_invalid_origin() {
 	new_test_ext().execute_with(|| {
-		assert_noop!(ValidatorSet::add_validator(RuntimeOrigin::signed(1), 4), DispatchError::BadOrigin);
+		assert_noop!(
+			ValidatorSet::add_validator(RuntimeOrigin::signed(1), 4),
+			DispatchError::BadOrigin
+		);
 	});
 }
 
@@ -54,6 +57,9 @@ fn duplicate_check() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(ValidatorSet::add_validator(RuntimeOrigin::root(), 4));
 		assert_eq!(ValidatorSet::validators(), vec![1u64, 2u64, 3u64, 4u64]);
-		assert_noop!(ValidatorSet::add_validator(RuntimeOrigin::root(), 4), Error::<Test>::Duplicate);
+		assert_noop!(
+			ValidatorSet::add_validator(RuntimeOrigin::root(), 4),
+			Error::<Test>::Duplicate
+		);
 	});
 }
