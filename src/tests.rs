@@ -28,7 +28,12 @@ fn add_validator_updates_validators_list() {
 fn remove_validator_updates_validators_list() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(ValidatorSet::remove_validator(RuntimeOrigin::root(), 2));
-		assert_eq!(ValidatorSet::validators(), vec![1u64, 3u64]);
+		assert_eq!(ValidatorSet::validators(), &[1, 3]);
+		assert_eq!(ValidatorSet::approved_validators(), &[1, 3]);
+		// add validator again
+		assert_ok!(ValidatorSet::add_validator(RuntimeOrigin::root(), 2));
+		assert_eq!(ValidatorSet::validators(), &[1, 3, 2]);
+		assert_eq!(ValidatorSet::approved_validators(), &[1, 3, 2]);
 	});
 }
 
