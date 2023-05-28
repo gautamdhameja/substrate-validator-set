@@ -1,4 +1,4 @@
-# Local network setup for testing Validator Set pallet
+# Local Network Setup For Testing Validator Set pallet
 
 If you are using the Substrate node template and want to set up a local network to test/use the validator set pallet, follow the steps below. Make sure you have completed all the steps in the [readme.md](../readme.md) before doing this.
 
@@ -12,7 +12,7 @@ The node template comes with two predefined chain configurations - `dev` and `lo
 Run the `Alice` validator:
 
 ```bash
-./target/release/node-template --chain=local --alice --base-path /tmp/a --port=30334 --ws-port 9944 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external
+./target/release/node-template --chain=local --alice --base-path ~/tmp/a --port=30334 --ws-port 9944 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external
 ```
 
 Note that we have provided --chain=local, and custom values for base-path, port, ws-port. These custom value are used to avoid conflicts when running all nodes on local machine. If you are running nodes on separate servers, you can leave these as defaults.
@@ -34,13 +34,13 @@ In this case, `12D3KooWQXBxhGvmbcb8siLZWf7bNzv3KrzEXhi9t2VbDGP57zR9` is the node
 Next, run the `Bob` and `Charlie` nodes:
 
 ```bash
-./target/release/node-template --chain=local --bob --base-path /tmp/b --port=30335 --ws-port 9945 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external --bootnodes /ip4/127.0.0.1/tcp/30334/p2p/12D3KooWQXBxhGvmbcb8siLZWf7bNzv3KrzEXhi9t2VbDGP57zR9
+./target/release/node-template --chain=local --bob --base-path ~/tmp/b --port=30335 --ws-port 9945 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external --bootnodes /ip4/127.0.0.1/tcp/30334/p2p/12D3KooWQXBxhGvmbcb8siLZWf7bNzv3KrzEXhi9t2VbDGP57zR9
 ```
 
 and,
 
 ```bash
-./target/release/node-template --chain=local --charlie --base-path /tmp/c --port=30336 --ws-port 9946 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external --bootnodes /ip4/127.0.0.1/tcp/30334/p2p/12D3KooWQXBxhGvmbcb8siLZWf7bNzv3KrzEXhi9t2VbDGP57zR9
+./target/release/node-template --chain=local --charlie --base-path ~/tmp/c --port=30336 --ws-port 9946 --ws-external --rpc-cors=all --rpc-methods=Unsafe --rpc-external --bootnodes /ip4/127.0.0.1/tcp/30334/p2p/12D3KooWQXBxhGvmbcb8siLZWf7bNzv3KrzEXhi9t2VbDGP57zR9
 ```
 
 As you can see, we have added an additional parameter when running `Bob` and `Charlie` nodes to provide a bootnode. The bootnodes parameter has the `Alice` node's identity. You should replace it with what you get in Step 2 above.
@@ -48,7 +48,7 @@ As you can see, we have added an additional parameter when running `Bob` and `Ch
 ### Step 4
 
 Open Polkadot JS Apps in your browser and connect it to the `Charlie` node using its ws endpoint. In this case, it would be: `ws://127.0.0.1:9946`. Remember we used a custom `ws-port`.
-In the Network Explorer you should see that `Alice` and `Bob` are producing blocks, while `Charlie` is not. This is because `Charlie` is not part of initial authorities from genesis config. 
+In the Network Explorer you should see that `Alice` and `Bob` are producing blocks, while `Charlie` is not. This is because `Charlie` is not part of initial authorities from genesis config.
 
 ### Step 5
 
@@ -60,7 +60,7 @@ From `Charlie` node connected Polkadot JS Apps instance, make an RPC call `autho
 ### Step 6
 
 Now make an extrinsic call from `Charlie` account - `Session - set_keys`.
-Use the string obtained in Step 5 above in the `keys: NodeTemplateRuntimeOpaqueSessionKeys` input. Enter the same value if you see multiple input fields grouped under keys (aura, grandpa, imonline).
+Use the string obtained in Step 5 above in the `keys: NodeTemplateRuntimeOpaqueSessionKeys` input. You'd have got a big string from the last step. First remove the `0x` from the beginning. Then divide that remaining bigger string into equal parts of 32 bytes each. Prefix `0x` to each of these strings and then enter them in the input fields for each of the keys (aura, grandpa, imonline).
 Put `0x` in the `proof` input.
 
 <br />
@@ -68,7 +68,7 @@ Put `0x` in the `proof` input.
 
 ### Step 7
 
-Finally, add `Charlie` as a validator by calling the `add_validator` extrinsic of the Validator Set pallet using `sudo`. Alice is set as the sudo key in node template.
+Finally, add `Charlie` as a validator by calling the `add_validator` extrinsic of the Validator Set pallet using `sudo`. Alice should be caller of this extrinsic, because Alice is set as the sudo key in node template.
 
 <br />
 <img src="./img/add-validator.png" alt="add-validator" />

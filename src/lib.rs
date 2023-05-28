@@ -29,7 +29,7 @@ use sp_std::{collections::btree_set::BTreeSet, prelude::*};
 
 pub const LOG_TARGET: &'static str = "runtime::validator-set";
 
-#[frame_support::pallet]
+#[frame_support::pallet(dev_mode)]
 pub mod pallet {
 	use super::*;
 	use frame_system::pallet_prelude::*;

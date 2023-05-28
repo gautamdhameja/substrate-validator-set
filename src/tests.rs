@@ -3,7 +3,7 @@
 #![cfg(test)]
 
 use super::*;
-use crate::mock::{authorities, new_test_ext, RuntimeOrigin, Session, Test, ValidatorSet};
+pub use crate::mock::{authorities, new_test_ext, RuntimeOrigin, Session, Test, ValidatorSet};
 use frame_support::{assert_noop, assert_ok, pallet_prelude::*};
 use sp_runtime::testing::UintAuthorityId;
 

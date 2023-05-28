@@ -2,7 +2,7 @@
 
 A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators in PoA networks.
 
-**Note: Current master is compatible with Substrate [polkadot-v0.9.41](https://github.com/paritytech/substrate/tree/polkadot-v0.9.41) branch. For older versions, please see releases/tags.**
+**Note: Current master is compatible with Substrate [polkadot-v0.9.42](https://github.com/paritytech/substrate/tree/polkadot-v0.9.42) branch. For older versions, please see releases/tags.**
 
 ## Demo
 
@@ -21,12 +21,12 @@ To see this pallet in action in a Substrate runtime, watch this video - https://
 default-features = false
 package = 'substrate-validator-set'
 git = 'https://github.com/gautamdhameja/substrate-validator-set.git'
-version = '0.9.41'
+version = '0.9.42'
 
 [dependencies.pallet-session]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v0.9.41'
+branch = 'polkadot-v0.9.42'
 ```
 
 ```toml
@@ -140,14 +140,21 @@ pub fn authority_keys_from_seed(s: &str) -> (AccountId, AuraId, GrandpaId) {
 * Add genesis config in the `chain_spec.rs` file for `session` and `validatorset` pallets, and update it for `Aura` and `Grandpa` pallets. Because the validators are provided by the `session` pallet, we do not initialize them explicitly for `Aura` and `Grandpa` pallets. Order is important, notice that `pallet_session` is declared after `pallet_balances` since it depends on it (session accounts should have some balance).
 
 ```rust
-fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
+fn testnet_genesis(
+	wasm_binary: &[u8],
+	initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
-	_enable_println: bool) -> GenesisConfig {
+	_enable_println: bool,
+) -> GenesisConfig {
 	GenesisConfig {
-		...,
+		system: SystemConfig {
+			// Add Wasm runtime to storage.
+			code: wasm_binary.to_vec(),
+		},
 		balances: BalancesConfig {
-			balances: endowed_accounts.iter().cloned().map(|k|(k, 1 << 60)).collect(),
+			// Configure endowed accounts with initial balance of 1 << 60.
+			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
 		},
 		validator_set: ValidatorSetConfig {
 			initial_validators: initial_authorities.iter().map(|x| x.0.clone()).collect::<Vec<_>>(),
@@ -163,6 +170,11 @@ fn testnet_genesis(initial_authorities: Vec<(AccountId, AuraId, GrandpaId)>,
 		grandpa: GrandpaConfig {
 			authorities: vec![],
 		},
+		sudo: SudoConfig {
+			// Assign network admin rights.
+			key: Some(root_key),
+		},
+		transaction_payment: Default::default(),
 	}
 }
 ```
