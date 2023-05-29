@@ -300,9 +300,9 @@ impl<T: Config> Convert<T::ValidatorId, Option<T::ValidatorId>> for ValidatorOf<
 	}
 }
 
-impl<T: Config> ValidatorSet<T::AccountId> for Pallet<T> {
+impl<T: Config> ValidatorSet<T::ValidatorId> for Pallet<T> {
 	type ValidatorId = T::ValidatorId;
-	type ValidatorIdOf = T::ValidatorIdOf;
+	type ValidatorIdOf = ValidatorOf<T>;
 
 	fn session_index() -> sp_staking::SessionIndex {
 		pallet_session::Pallet::<T>::current_index()
@@ -313,7 +313,7 @@ impl<T: Config> ValidatorSet<T::AccountId> for Pallet<T> {
 	}
 }
 
-impl<T: Config> ValidatorSetWithIdentification<T::AccountId> for Pallet<T> {
+impl<T: Config> ValidatorSetWithIdentification<T::ValidatorId> for Pallet<T> {
 	type Identification = T::ValidatorId;
 	type IdentificationOf = ValidatorOf<T>;
 }
