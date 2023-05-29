@@ -13,8 +13,10 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+mod benchmarking;
 mod mock;
 mod tests;
+pub mod weights;
 
 use frame_support::{
 	ensure,
@@ -26,10 +28,11 @@ pub use pallet::*;
 use sp_runtime::traits::{Convert, Zero};
 use sp_staking::offence::{Offence, OffenceError, ReportOffence};
 use sp_std::prelude::*;
+pub use weights::*;
 
 pub const LOG_TARGET: &'static str = "runtime::validator-set";
 
-#[frame_support::pallet(dev_mode)]
+#[frame_support::pallet()]
 pub mod pallet {
 	use super::*;
 	use frame_system::pallet_prelude::*;
@@ -47,6 +50,9 @@ pub mod pallet {
 		/// Minimum number of validators to leave in the validator set during
 		/// auto removal.
 		type MinAuthorities: Get<u32>;
+
+		/// Information on runtime weights.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -56,10 +62,6 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn validators)]
 	pub type Validators<T: Config> = StorageValue<_, Vec<T::ValidatorId>, ValueQuery>;
-
-	#[pallet::storage]
-	#[pallet::getter(fn approved_validators)]
-	pub type ApprovedValidators<T: Config> = StorageValue<_, Vec<T::ValidatorId>, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn offline_validators)]
@@ -82,10 +84,6 @@ pub mod pallet {
 		TooLowValidatorCount,
 		/// Validator is already in the validator set.
 		Duplicate,
-		/// Validator is not approved for re-addition.
-		ValidatorNotApproved,
-		/// Only the validator can add itself back after coming online.
-		BadOrigin,
 	}
 
 	#[pallet::hooks]
@@ -120,12 +118,11 @@ pub mod pallet {
 		/// The origin can be configured using the `AddRemoveOrigin` type in the
 		/// host runtime. Can also be set to sudo/root.
 		#[pallet::call_index(0)]
-		#[pallet::weight(0)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::add_validator())]
 		pub fn add_validator(origin: OriginFor<T>, validator_id: T::ValidatorId) -> DispatchResult {
 			T::AddRemoveOrigin::ensure_origin(origin)?;
 
 			Self::do_add_validator(validator_id.clone())?;
-			Self::approve_validator(validator_id)?;
 
 			Ok(())
 		}
@@ -135,7 +132,7 @@ pub mod pallet {
 		/// The origin can be configured using the `AddRemoveOrigin` type in the
 		/// host runtime. Can also be set to sudo/root.
 		#[pallet::call_index(1)]
-		#[pallet::weight(0)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::remove_validator())]
 		pub fn remove_validator(
 			origin: OriginFor<T>,
 			validator_id: T::ValidatorId,
@@ -143,29 +140,6 @@ pub mod pallet {
 			T::AddRemoveOrigin::ensure_origin(origin)?;
 
 			Self::do_remove_validator(validator_id.clone())?;
-			Self::unapprove_validator(validator_id)?;
-
-			Ok(())
-		}
-
-		/// Add an approved validator again when it comes back online.
-		///
-		/// The origin can be configured using the `AddRemoveOrigin` type in the
-		/// host runtime. Can also be set to sudo/root.
-		#[pallet::call_index(2)]
-		#[pallet::weight(0)]
-		pub fn add_validator_again(
-			origin: OriginFor<T>,
-			validator_id: T::ValidatorId,
-		) -> DispatchResult {
-			T::AddRemoveOrigin::ensure_origin(origin)?;
-
-			ensure!(
-				<ApprovedValidators<T>>::get().contains(&validator_id),
-				Error::<T>::ValidatorNotApproved
-			);
-
-			Self::do_add_validator(validator_id)?;
 
 			Ok(())
 		}
@@ -181,7 +155,6 @@ impl<T: Config> Pallet<T> {
 		assert!(<Validators<T>>::get().is_empty(), "Validators are already initialized!");
 
 		<Validators<T>>::put(validators);
-		<ApprovedValidators<T>>::put(validators);
 	}
 
 	fn do_add_validator(validator_id: T::ValidatorId) -> DispatchResult {
@@ -214,20 +187,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn approve_validator(validator_id: T::ValidatorId) -> DispatchResult {
-		ensure!(!<ApprovedValidators<T>>::get().contains(&validator_id), Error::<T>::Duplicate);
-		<ApprovedValidators<T>>::mutate(|v| v.push(validator_id.clone()));
-		Ok(())
-	}
-
-	fn unapprove_validator(validator_id: T::ValidatorId) -> DispatchResult {
-		let mut approved_set = <ApprovedValidators<T>>::get();
-		approved_set.retain(|v| *v != validator_id);
-		<ApprovedValidators<T>>::set(approved_set);
-		Ok(())
-	}
-
-	// Adds offline validators to a local cache for removal at new session.
+	// Adds offline validators to a local cache for removal on new session.
 	fn mark_for_removal(validator_id: T::ValidatorId) {
 		<OfflineValidators<T>>::mutate(|v| v.push(validator_id));
 		log::debug!(target: LOG_TARGET, "Offline validator marked for auto removal.");
@@ -291,8 +251,7 @@ impl<T: Config> EstimateNextSessionRotation<T::BlockNumber> for Pallet<T> {
 	}
 }
 
-// Implementation of Convert trait.
-// This is to satisfy trait bounds in session pallet.
+// Implementation of Convert trait to satisfy trait bounds in session pallet.
 // Here it just returns the same ValidatorId.
 pub struct ValidatorOf<T>(sp_std::marker::PhantomData<T>);
 

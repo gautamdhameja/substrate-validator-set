@@ -64,6 +64,7 @@ impl validator_set::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type AddRemoveOrigin = EnsureRoot<AccountId>;
 	type MinAuthorities = MinAuthorities;
+	type WeightInfo = validator_set::weights::SubstrateWeight<Runtime>;
 }
 ```
 
@@ -204,4 +205,4 @@ When a validator goes offline, it skips its block production slot in Aura and th
 
 ## Disclaimer
 
-This code is **not audited or reviewed** for production use cases. You can expect bugs and security vulnerabilities. Do not use it without proper testing and audit in a real application.
+This code is **not audited** for production use cases. You can expect security vulnerabilities. Do not use it without proper testing and audit in a production applications.
