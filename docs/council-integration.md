@@ -9,6 +9,9 @@ parameter_types! {
 	pub const CouncilMotionDuration: BlockNumber = 3 * MINUTES;
 	pub const CouncilMaxProposals: u32 = 100;
 	pub const CouncilMaxMembers: u32 = 100;
+	
+	// From system config trait impl.
+	pub MaxCollectivesProposalWeight: Weight = Perbill::from_percent(50) * BlockWeights::get().max_block;
 }
 
 impl pallet_collective::Config for Runtime {
@@ -20,16 +23,17 @@ impl pallet_collective::Config for Runtime {
 	type MaxMembers = CouncilMaxMembers;
 	type DefaultVote = pallet_collective::PrimeDefaultVote;
 	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+	type SetMembersOrigin = EnsureRoot<Self::AccountId>;
+	type MaxProposalWeight = MaxCollectivesProposalWeight;
 }
 ```
 
-2. Setup a custom origin using the `Collective` pallet. In the example below, we have a custom origin that ensures either root or at least half of the collective's approval. 
+2. Setup a custom origin using the `Collective` pallet. In the example below, we have a custom origin that ensures either root or at least half of the collective's approval.
 
 ```rust
-type EnsureRootOrHalfCouncil = EnsureOneOf<
-	AccountId,
+type EnsureRootOrHalfCouncil = EitherOfDiverse<
 	EnsureRoot<AccountId>,
-	pallet_collective::EnsureProportionAtLeast<1, 2, AccountId>
+	pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
 >;
 ```
 
@@ -38,8 +42,8 @@ type EnsureRootOrHalfCouncil = EnsureOneOf<
 ```rust
 impl validator_set::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type MinAuthorities = MinAuthorities; // see readme for type declaration
-	type AddRemoveOrigin = EnsureRootOrHalfCouncil;
+	type MinAuthorities = MinAuthorities;
+	type AddRemoveOrigin = EnsureRootOrHalfCouncil; // Note
 }
 ```
 
@@ -56,10 +60,10 @@ For rest of the setup steps, see [readme.md](../readme.md).
 
 ## Run
 
-Before running - Alice and Bob are set as initial authorities and also as council members.
+Before running - Double check `Alice` and `Bob` are set as initial authorities and also as council members.
 
 - Start the chain in the `local_testnet` mode with the non-validator (--charlie) first (so it take the default port and connects with the Polkadot JS web app).
-- Start `--alice` and `--bob` nodes too.
+- Start `--alice` and `--bob` nodes.
 - Alice and Bob will produce blocks and Charlie will only import them as it is not a validator yet.
 - From Charlie's node connected web app instance, make an RPC call `author - rotate_keys`. This will print session keys for Charlie node.
 - Use this printed string in the step 4 and make an extrinsic call from `Charlie` account - `Session - set_keys`. Put 0x in the proof input.

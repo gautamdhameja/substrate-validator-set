@@ -291,7 +291,9 @@ impl<T: Config> EstimateNextSessionRotation<T::BlockNumber> for Pallet<T> {
 	}
 }
 
-// Implementation of Convert trait for mapping ValidatorId with AccountId.
+// Implementation of Convert trait.
+// This is to satisfy trait bounds in session pallet.
+// Here it just returns the same ValidatorId.
 pub struct ValidatorOf<T>(sp_std::marker::PhantomData<T>);
 
 impl<T: Config> Convert<T::ValidatorId, Option<T::ValidatorId>> for ValidatorOf<T> {
@@ -319,6 +321,7 @@ impl<T: Config> ValidatorSetWithIdentification<T::ValidatorId> for Pallet<T> {
 }
 
 // Offence reporting and unresponsiveness management.
+// This is for the ImOnline pallet integration.
 impl<T: Config, O: Offence<(T::ValidatorId, T::ValidatorId)>>
 	ReportOffence<T::AccountId, (T::ValidatorId, T::ValidatorId), O> for Pallet<T>
 {
