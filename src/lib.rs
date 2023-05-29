@@ -84,8 +84,6 @@ pub mod pallet {
 		Duplicate,
 		/// Validator is not approved for re-addition.
 		ValidatorNotApproved,
-		/// Only the validator can add itself back after coming online.
-		BadOrigin,
 	}
 
 	#[pallet::hooks]
@@ -227,7 +225,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	// Adds offline validators to a local cache for removal at new session.
+	// Adds offline validators to a local cache for removal on new session.
 	fn mark_for_removal(validator_id: T::ValidatorId) {
 		<OfflineValidators<T>>::mutate(|v| v.push(validator_id));
 		log::debug!(target: LOG_TARGET, "Offline validator marked for auto removal.");
@@ -291,8 +289,7 @@ impl<T: Config> EstimateNextSessionRotation<T::BlockNumber> for Pallet<T> {
 	}
 }
 
-// Implementation of Convert trait.
-// This is to satisfy trait bounds in session pallet.
+// Implementation of Convert trait to satisfy trait bounds in session pallet.
 // Here it just returns the same ValidatorId.
 pub struct ValidatorOf<T>(sp_std::marker::PhantomData<T>);
 
