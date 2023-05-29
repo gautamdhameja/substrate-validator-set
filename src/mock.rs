@@ -186,6 +186,7 @@ impl validator_set::Config for Test {
 	type AddRemoveOrigin = EnsureRoot<Self::AccountId>;
 	type RuntimeEvent = RuntimeEvent;
 	type MinAuthorities = MinAuthorities;
+	type WeightInfo = ();
 }
 
 impl pallet_session::Config for Test {
