@@ -4,10 +4,6 @@ A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove aut
 
 **Note: Current master is compatible with Substrate [polkadot-v0.9.42](https://github.com/paritytech/substrate/tree/polkadot-v0.9.42) branch. For older versions, please see releases/tags.**
 
-## Demo
-
-To see this pallet in action in a Substrate runtime, watch this video - https://www.youtube.com/watch?v=lIYxE-tOAdw
-
 ## Setup with Substrate Node Template
 
 ### Dependencies - runtime/cargo.toml
@@ -180,14 +176,6 @@ fn testnet_genesis(
 }
 ```
 
-### Types for Polkadot JS Apps/API
-
-```json
-{
-  "Keys": "SessionKeys2"
-}
-```
-
 ## Run
 
 Once you have set up the pallet in your node/node-template and everything compiles, follow the steps in [docs/local-network-setup.md](./docs/local-network-setup.md) to run a local network and add validators.
@@ -195,13 +183,13 @@ Also, watch this video to see this in action - https://www.youtube.com/watch?v=l
 
 ## Extensions
 
-### Council-based governance
+### Council-based Governance
 
 Instead of using `sudo`, for a council-based governance, use the pallet with the `Collective` pallet. Follow the steps in [docs/council-integration.md](./docs/council-integration.md).
 
-### Auto-removal of offline validators
+### Auto-removal Of Offline Validators
 
-When a validator goes offline, it skips its block production slot in Aura and that causes increased block times. Sometimes, we want to remove these offline validators so that the block time can recover to normal. The `ImOnline` pallet, when added to a runtime, can report offline validators and the `ValidatorSet` pallet implements the required types to integrate with `ImOnline` pallet for automatic removal of offline validators. To use the `ValidatorSet` pallet with the `ImOnline` pallet, follow the steps in [docs/im-online-integration.md](./docs/im-online-integration.md).
+When a validator goes offline, it skips its block production slot and that causes increased block times. Sometimes, we want to remove these offline validators so that the block time can recover to normal. The `ImOnline` pallet, when added to a runtime, can report offline validators. The `ValidatorSet` pallet implements the required types to integrate with `ImOnline` pallet for automatic removal of offline validators. To use the `ValidatorSet` pallet with the `ImOnline` pallet, follow the steps in [docs/im-online-integration.md](./docs/im-online-integration.md).
 
 ## Disclaimer
 
