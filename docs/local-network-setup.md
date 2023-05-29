@@ -60,7 +60,7 @@ From `Charlie` node connected Polkadot JS Apps instance, make an RPC call `autho
 ### Step 6
 
 Now make an extrinsic call from `Charlie` account - `Session - set_keys`.
-Use the string obtained in Step 5 above in the `keys: NodeTemplateRuntimeOpaqueSessionKeys` input. You'd have got a big string from the last step. First remove the `0x` from the beginning. Then divide that remaining bigger string into equal parts of 32 bytes each. Prefix `0x` to each of these strings and then enter them in the input fields for each of the keys (aura, grandpa, imonline).
+We need to use the substrings of the string obtained in Step 5, in the `keys: NodeTemplateRuntimeOpaqueSessionKeys` input fields. First remove the `0x` from the beginning. Then divide that string into equal parts of 32 bytes each. Prefix `0x` to each of these smaller strings, and then enter them in the input fields for each of the keys (aura, grandpa, imonline).
 Put `0x` in the `proof` input.
 
 <br />

@@ -5,7 +5,7 @@
 //! Substrate-based PoA networks. It also integrates with the im-online pallet
 //! to automatically remove offline validators.
 //!
-//! The pallet uses the Session pallet and implements related traits for session
+//! The pallet depends on the Session pallet and implements related traits for session
 //! management. Currently it uses periodic session rotation provided by the
 //! session pallet to automatically rotate sessions. For this reason, the
 //! validator addition and removal becomes effective only after 2 sessions
@@ -25,7 +25,7 @@ use log;
 pub use pallet::*;
 use sp_runtime::traits::{Convert, Zero};
 use sp_staking::offence::{Offence, OffenceError, ReportOffence};
-use sp_std::{collections::btree_set::BTreeSet, prelude::*};
+use sp_std::prelude::*;
 
 pub const LOG_TARGET: &'static str = "runtime::validator-set";
 
@@ -55,24 +55,24 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn validators)]
-	pub type Validators<T: Config> = StorageValue<_, Vec<T::AccountId>, ValueQuery>;
+	pub type Validators<T: Config> = StorageValue<_, Vec<T::ValidatorId>, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn approved_validators)]
-	pub type ApprovedValidators<T: Config> = StorageValue<_, Vec<T::AccountId>, ValueQuery>;
+	pub type ApprovedValidators<T: Config> = StorageValue<_, Vec<T::ValidatorId>, ValueQuery>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn validators_to_remove)]
-	pub type OfflineValidators<T: Config> = StorageValue<_, Vec<T::AccountId>, ValueQuery>;
+	#[pallet::getter(fn offline_validators)]
+	pub type OfflineValidators<T: Config> = StorageValue<_, Vec<T::ValidatorId>, ValueQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// New validator addition initiated. Effective in ~2 sessions.
-		ValidatorAdditionInitiated(T::AccountId),
+		ValidatorAdditionInitiated(T::ValidatorId),
 
 		/// Validator removal initiated. Effective in ~2 sessions.
-		ValidatorRemovalInitiated(T::AccountId),
+		ValidatorRemovalInitiated(T::ValidatorId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -93,7 +93,7 @@ pub mod pallet {
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
-		pub initial_validators: Vec<T::AccountId>,
+		pub initial_validators: Vec<T::ValidatorId>,
 	}
 
 	#[cfg(feature = "std")]
@@ -121,7 +121,7 @@ pub mod pallet {
 		/// host runtime. Can also be set to sudo/root.
 		#[pallet::call_index(0)]
 		#[pallet::weight(0)]
-		pub fn add_validator(origin: OriginFor<T>, validator_id: T::AccountId) -> DispatchResult {
+		pub fn add_validator(origin: OriginFor<T>, validator_id: T::ValidatorId) -> DispatchResult {
 			T::AddRemoveOrigin::ensure_origin(origin)?;
 
 			Self::do_add_validator(validator_id.clone())?;
@@ -138,7 +138,7 @@ pub mod pallet {
 		#[pallet::weight(0)]
 		pub fn remove_validator(
 			origin: OriginFor<T>,
-			validator_id: T::AccountId,
+			validator_id: T::ValidatorId,
 		) -> DispatchResult {
 			T::AddRemoveOrigin::ensure_origin(origin)?;
 
@@ -150,15 +150,16 @@ pub mod pallet {
 
 		/// Add an approved validator again when it comes back online.
 		///
-		/// For this call, the dispatch origin must be the validator itself.
+		/// The origin can be configured using the `AddRemoveOrigin` type in the
+		/// host runtime. Can also be set to sudo/root.
 		#[pallet::call_index(2)]
 		#[pallet::weight(0)]
 		pub fn add_validator_again(
 			origin: OriginFor<T>,
-			validator_id: T::AccountId,
+			validator_id: T::ValidatorId,
 		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-			ensure!(who == validator_id, Error::<T>::BadOrigin);
+			T::AddRemoveOrigin::ensure_origin(origin)?;
+
 			ensure!(
 				<ApprovedValidators<T>>::get().contains(&validator_id),
 				Error::<T>::ValidatorNotApproved
@@ -172,7 +173,7 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	fn initialize_validators(validators: &[T::AccountId]) {
+	fn initialize_validators(validators: &[T::ValidatorId]) {
 		assert!(
 			validators.len() as u32 >= T::MinAuthorities::get(),
 			"Initial set of validators must be at least T::MinAuthorities"
@@ -183,7 +184,7 @@ impl<T: Config> Pallet<T> {
 		<ApprovedValidators<T>>::put(validators);
 	}
 
-	fn do_add_validator(validator_id: T::AccountId) -> DispatchResult {
+	fn do_add_validator(validator_id: T::ValidatorId) -> DispatchResult {
 		ensure!(!<Validators<T>>::get().contains(&validator_id), Error::<T>::Duplicate);
 		<Validators<T>>::mutate(|v| v.push(validator_id.clone()));
 
@@ -193,7 +194,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn do_remove_validator(validator_id: T::AccountId) -> DispatchResult {
+	fn do_remove_validator(validator_id: T::ValidatorId) -> DispatchResult {
 		let mut validators = <Validators<T>>::get();
 
 		// Ensuring that the post removal, target validator count doesn't go
@@ -213,13 +214,13 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn approve_validator(validator_id: T::AccountId) -> DispatchResult {
+	fn approve_validator(validator_id: T::ValidatorId) -> DispatchResult {
 		ensure!(!<ApprovedValidators<T>>::get().contains(&validator_id), Error::<T>::Duplicate);
 		<ApprovedValidators<T>>::mutate(|v| v.push(validator_id.clone()));
 		Ok(())
 	}
 
-	fn unapprove_validator(validator_id: T::AccountId) -> DispatchResult {
+	fn unapprove_validator(validator_id: T::ValidatorId) -> DispatchResult {
 		let mut approved_set = <ApprovedValidators<T>>::get();
 		approved_set.retain(|v| *v != validator_id);
 		<ApprovedValidators<T>>::set(approved_set);
@@ -227,7 +228,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	// Adds offline validators to a local cache for removal at new session.
-	fn mark_for_removal(validator_id: T::AccountId) {
+	fn mark_for_removal(validator_id: T::ValidatorId) {
 		<OfflineValidators<T>>::mutate(|v| v.push(validator_id));
 		log::debug!(target: LOG_TARGET, "Offline validator marked for auto removal.");
 	}
@@ -238,7 +239,7 @@ impl<T: Config> Pallet<T> {
 	// check for `MinAuthorities` here, because the offline validators will not
 	// produce blocks and will have the same overall effect on the runtime.
 	fn remove_offline_validators() {
-		let validators_to_remove: BTreeSet<_> = <OfflineValidators<T>>::get().into_iter().collect();
+		let validators_to_remove = <OfflineValidators<T>>::get();
 
 		// Delete from active validator set.
 		<Validators<T>>::mutate(|vs| vs.retain(|v| !validators_to_remove.contains(v)));
@@ -249,15 +250,15 @@ impl<T: Config> Pallet<T> {
 		);
 
 		// Clear the offline validator list to avoid repeated deletion.
-		<OfflineValidators<T>>::put(Vec::<T::AccountId>::new());
+		<OfflineValidators<T>>::put(Vec::<T::ValidatorId>::new());
 	}
 }
 
 // Provides the new set of validators to the session module when session is
 // being rotated.
-impl<T: Config> pallet_session::SessionManager<T::AccountId> for Pallet<T> {
+impl<T: Config> pallet_session::SessionManager<T::ValidatorId> for Pallet<T> {
 	// Plan a new session and provide new validator set.
-	fn new_session(_new_index: u32) -> Option<Vec<T::AccountId>> {
+	fn new_session(_new_index: u32) -> Option<Vec<T::ValidatorId>> {
 		// Remove any offline validators. This will only work when the runtime
 		// also has the im-online pallet.
 		Self::remove_offline_validators();
@@ -290,7 +291,9 @@ impl<T: Config> EstimateNextSessionRotation<T::BlockNumber> for Pallet<T> {
 	}
 }
 
-// Implementation of Convert trait for mapping ValidatorId with AccountId.
+// Implementation of Convert trait.
+// This is to satisfy trait bounds in session pallet.
+// Here it just returns the same ValidatorId.
 pub struct ValidatorOf<T>(sp_std::marker::PhantomData<T>);
 
 impl<T: Config> Convert<T::ValidatorId, Option<T::ValidatorId>> for ValidatorOf<T> {
@@ -299,27 +302,28 @@ impl<T: Config> Convert<T::ValidatorId, Option<T::ValidatorId>> for ValidatorOf<
 	}
 }
 
-impl<T: Config> ValidatorSet<T::AccountId> for Pallet<T> {
+impl<T: Config> ValidatorSet<T::ValidatorId> for Pallet<T> {
 	type ValidatorId = T::ValidatorId;
-	type ValidatorIdOf = T::ValidatorIdOf;
+	type ValidatorIdOf = ValidatorOf<T>;
 
 	fn session_index() -> sp_staking::SessionIndex {
 		pallet_session::Pallet::<T>::current_index()
 	}
 
-	fn validators() -> Vec<Self::ValidatorId> {
+	fn validators() -> Vec<T::ValidatorId> {
 		pallet_session::Pallet::<T>::validators()
 	}
 }
 
-impl<T: Config> ValidatorSetWithIdentification<T::AccountId> for Pallet<T> {
+impl<T: Config> ValidatorSetWithIdentification<T::ValidatorId> for Pallet<T> {
 	type Identification = T::ValidatorId;
 	type IdentificationOf = ValidatorOf<T>;
 }
 
 // Offence reporting and unresponsiveness management.
-impl<T: Config, O: Offence<(T::AccountId, T::AccountId)>>
-	ReportOffence<T::AccountId, (T::AccountId, T::AccountId), O> for Pallet<T>
+// This is for the ImOnline pallet integration.
+impl<T: Config, O: Offence<(T::ValidatorId, T::ValidatorId)>>
+	ReportOffence<T::AccountId, (T::ValidatorId, T::ValidatorId), O> for Pallet<T>
 {
 	fn report_offence(_reporters: Vec<T::AccountId>, offence: O) -> Result<(), OffenceError> {
 		let offenders = offence.offenders();
@@ -332,7 +336,7 @@ impl<T: Config, O: Offence<(T::AccountId, T::AccountId)>>
 	}
 
 	fn is_known_offence(
-		_offenders: &[(T::AccountId, T::AccountId)],
+		_offenders: &[(T::ValidatorId, T::ValidatorId)],
 		_time_slot: &O::TimeSlot,
 	) -> bool {
 		false
