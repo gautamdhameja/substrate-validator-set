@@ -23,6 +23,7 @@ use frame_support::{
 	ensure,
 	pallet_prelude::*,
 	traits::{EstimateNextSessionRotation, Get, ValidatorSet, ValidatorSetWithIdentification},
+	DefaultNoBound,
 };
 use log;
 pub use pallet::*;
@@ -90,15 +91,9 @@ pub mod pallet {
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
 	#[pallet::genesis_config]
+	#[derive(DefaultNoBound)]
 	pub struct GenesisConfig<T: Config> {
 		pub initial_validators: Vec<T::ValidatorId>,
-	}
-
-	#[cfg(feature = "std")]
-	impl<T: Config> Default for GenesisConfig<T> {
-		fn default() -> Self {
-			Self { initial_validators: Default::default() }
-		}
 	}
 
 	#[pallet::genesis_build]
