@@ -10,7 +10,7 @@ use pallet_session::*;
 use sp_core::{crypto::key_types::DUMMY, H256};
 use sp_runtime::{
 	impl_opaque_keys,
-	testing::{UintAuthorityId},
+	testing::UintAuthorityId,
 	traits::{BlakeTwo256, IdentityLookup, OpaqueKeys},
 	BuildStorage, KeyTypeId, RuntimeAppPublic,
 };
