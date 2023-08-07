@@ -18,6 +18,7 @@ mod mock;
 mod tests;
 pub mod weights;
 
+use frame_system::pallet_prelude::*;
 use frame_support::{
 	ensure,
 	pallet_prelude::*,
@@ -35,7 +36,6 @@ pub const LOG_TARGET: &'static str = "runtime::validator-set";
 #[frame_support::pallet()]
 pub mod pallet {
 	use super::*;
-	use frame_system::pallet_prelude::*;
 
 	/// Configure the pallet by specifying the parameters and types on which it
 	/// depends.
@@ -102,7 +102,7 @@ pub mod pallet {
 	}
 
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
 		fn build(&self) {
 			Pallet::<T>::initialize_validators(&self.initial_validators);
 		}
@@ -233,20 +233,20 @@ impl<T: Config> pallet_session::SessionManager<T::ValidatorId> for Pallet<T> {
 	fn start_session(_start_index: u32) {}
 }
 
-impl<T: Config> EstimateNextSessionRotation<T::BlockNumber> for Pallet<T> {
-	fn average_session_length() -> T::BlockNumber {
+impl<T: Config> EstimateNextSessionRotation<BlockNumberFor<T>> for Pallet<T> {
+	fn average_session_length() -> BlockNumberFor<T> {
 		Zero::zero()
 	}
 
 	fn estimate_current_session_progress(
-		_now: T::BlockNumber,
+		_now: BlockNumberFor<T>,
 	) -> (Option<sp_runtime::Permill>, frame_support::dispatch::Weight) {
 		(None, Zero::zero())
 	}
 
 	fn estimate_next_session_rotation(
-		_now: T::BlockNumber,
-	) -> (Option<T::BlockNumber>, frame_support::dispatch::Weight) {
+		_now: BlockNumberFor<T>,
+	) -> (Option<BlockNumberFor<T>>, frame_support::dispatch::Weight) {
 		(None, Zero::zero())
 	}
 }

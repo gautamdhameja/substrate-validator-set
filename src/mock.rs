@@ -4,15 +4,15 @@
 
 use super::*;
 use crate as validator_set;
-use frame_support::{parameter_types, traits::GenesisBuild, BasicExternalities};
+use frame_support::{parameter_types, BasicExternalities};
 use frame_system::EnsureRoot;
 use pallet_session::*;
 use sp_core::{crypto::key_types::DUMMY, H256};
 use sp_runtime::{
 	impl_opaque_keys,
-	testing::{Header, UintAuthorityId},
+	testing::{UintAuthorityId},
 	traits::{BlakeTwo256, IdentityLookup, OpaqueKeys},
-	KeyTypeId, RuntimeAppPublic,
+	BuildStorage, KeyTypeId, RuntimeAppPublic,
 };
 use std::cell::RefCell;
 
@@ -53,15 +53,14 @@ impl OpaqueKeys for PreUpgradeMockSessionKeys {
 	}
 }
 
-type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 
 frame_support::construct_runtime!(
 	pub struct Test
-	where
-		Block = Block,
-		NodeBlock = Block,
-		UncheckedExtrinsic = UncheckedExtrinsic,
+	// where
+	// 	Block = Block,
+	// 	NodeBlock = Block,
+	// 	UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
 		ValidatorSet: validator_set,
@@ -124,7 +123,7 @@ pub fn authorities() -> Vec<UintAuthorityId> {
 }
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	let mut t = frame_system::GenesisConfig::<Test>::default().build_storage().unwrap();
 	let keys: Vec<_> = NEXT_VALIDATORS
 		.with(|l| l.borrow().iter().cloned().map(|i| (i, i, UintAuthorityId(i).into())).collect());
 	BasicExternalities::execute_with_storage(&mut t, || {
@@ -157,14 +156,13 @@ impl frame_system::Config for Test {
 	type BlockLength = ();
 	type DbWeight = ();
 	type RuntimeOrigin = RuntimeOrigin;
-	type Index = u64;
-	type BlockNumber = u64;
+	type Nonce = u64;
 	type RuntimeCall = RuntimeCall;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
 	type AccountId = u64;
 	type Lookup = IdentityLookup<Self::AccountId>;
-	type Header = Header;
+  type Block = Block;
 	type RuntimeEvent = RuntimeEvent;
 	type BlockHashCount = BlockHashCount;
 	type Version = ();
