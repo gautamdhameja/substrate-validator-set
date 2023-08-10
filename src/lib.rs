@@ -27,8 +27,13 @@ use frame_support::{
 };
 use log;
 pub use pallet::*;
-use sp_runtime::traits::{Convert, Zero};
-use sp_staking::offence::{Offence, OffenceError, ReportOffence};
+use sp_runtime::{traits::{Convert, Zero}, Perbill,};
+use sp_staking::{
+  offence::{
+    DisableStrategy, Offence, OffenceError, OffenceDetails, OnOffenceHandler, ReportOffence,
+  },
+  SessionIndex,
+};
 use sp_std::prelude::*;
 pub use weights::*;
 
@@ -207,6 +212,36 @@ impl<T: Config> Pallet<T> {
 		// Clear the offline validator list to avoid repeated deletion.
 		<OfflineValidators<T>>::put(Vec::<T::ValidatorId>::new());
 	}
+
+  // Removes disabled validators from the validator set.
+  // It is called in the session change hook and removes the validators
+	// who were disabled. We do not check for `MinAuthorities` here,
+  // because the offline validators will not produce blocks and will
+  // have the same overall effect on the runtime.
+  fn remove_disabled_validators() {
+    let validators = <pallet_session::Pallet<T>>::validators();
+    let validators_index_to_remove = <pallet_session::Pallet<T>>::disabled_validators();
+    let mut validators_to_remove: Vec<T::ValidatorId> = Default::default();
+
+    validators_index_to_remove.iter().for_each(|i| {
+      if let Some(validator) = validators.get(*i as usize) {
+        validators_to_remove.push(validator.clone());
+      }
+    });
+
+    // Delete from active validator set.
+		<Validators<T>>::mutate(|vs| vs.retain(|v| !validators_to_remove.contains(v)));
+		log::debug!(
+			target: LOG_TARGET,
+			"Initiated removal of {:?} disabled validators.",
+			validators_to_remove.len()
+		);
+  }
+
+  // Disable validator from current `pallet_session` validators set
+  fn disable_validator(validator: &T::ValidatorId) -> bool {
+    <pallet_session::Pallet<T>>::disable(validator)
+  }
 }
 
 // Provides the new set of validators to the session module when session is
@@ -217,6 +252,9 @@ impl<T: Config> pallet_session::SessionManager<T::ValidatorId> for Pallet<T> {
 		// Remove any offline validators. This will only work when the runtime
 		// also has the im-online pallet.
 		Self::remove_offline_validators();
+    // Remove any disabled validators. This will only work when the runtime
+		// also has the offences and session::historical pallets
+    Self::remove_disabled_validators();
 
 		log::debug!(target: LOG_TARGET, "New session called; updated validator set provided.");
 
@@ -260,7 +298,7 @@ impl<T: Config> ValidatorSet<T::ValidatorId> for Pallet<T> {
 	type ValidatorId = T::ValidatorId;
 	type ValidatorIdOf = ValidatorOf<T>;
 
-	fn session_index() -> sp_staking::SessionIndex {
+	fn session_index() -> SessionIndex {
 		pallet_session::Pallet::<T>::current_index()
 	}
 
@@ -294,5 +332,42 @@ impl<T: Config, O: Offence<(T::ValidatorId, T::ValidatorId)>>
 		_time_slot: &O::TimeSlot,
 	) -> bool {
 		false
+	}
+}
+
+// Implementation of OnOffenceHandler.
+// This is for the Offences + Historical pallets integration.
+impl<T: Config>
+	OnOffenceHandler<T::AccountId, pallet_session::historical::IdentificationTuple<T>, Weight>
+	for Pallet<T>
+where
+	T: pallet_session::historical::Config,
+{
+	fn on_offence(
+		offenders: &[OffenceDetails<
+			T::AccountId,
+			pallet_session::historical::IdentificationTuple<T>,
+		>],
+		_slash_fraction: &[Perbill],
+		_slash_session: SessionIndex,
+		_disable_strategy: DisableStrategy,
+	) -> Weight {
+		let mut consumed_weight = Weight::from_parts(0, 0);
+		let mut add_db_reads_writes = |reads, writes| {
+			consumed_weight += T::DbWeight::get().reads_writes(reads, writes);
+		};
+
+    offenders.iter().for_each(|o| {
+      let offender = o.offender.clone();
+      if Self::disable_validator(&offender.0) {
+        // Validator was not yet disabled, it is added to `DisabledValidators`
+        add_db_reads_writes(1, 1);
+      } else {
+        // Validator was already disabled, it is not added to `DisabledValidators` (no writes)
+        add_db_reads_writes(1, 0);
+      }
+    });
+
+    consumed_weight
 	}
 }
