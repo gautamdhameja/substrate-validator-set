@@ -180,6 +180,7 @@ impl validator_set::Config for Test {
 	type AddRemoveOrigin = EnsureRoot<Self::AccountId>;
 	type RuntimeEvent = RuntimeEvent;
 	type MinAuthorities = MinAuthorities;
+  type OnDisabled = ();
 	type WeightInfo = ();
 }
 

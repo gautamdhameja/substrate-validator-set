@@ -39,6 +39,35 @@ pub use weights::*;
 
 pub const LOG_TARGET: &'static str = "runtime::validator-set";
 
+/// Trait that defines an action to be executed when a validator is disabled
+/// It is agnostic about what is done in that action, `on_disabled` method just
+/// expect a `Weight` in return
+pub trait OnDisabled<T>
+where
+  T: frame_system::Config + pallet_session::Config
+{
+  fn on_disabled(
+		offender: &T::ValidatorId,
+		slash_fraction: &[Perbill],
+		slash_session: SessionIndex,
+		disable_strategy: DisableStrategy,
+  ) -> Weight;
+}
+
+impl<T> OnDisabled<T> for ()
+where
+  T: frame_system::Config + pallet_session::Config
+{
+  fn on_disabled(
+    _offenders: &T::ValidatorId,
+		_slash_fraction: &[Perbill],
+		_slash_session: SessionIndex,
+		_disable_strategy: DisableStrategy,
+  ) -> Weight {
+    Weight::zero()
+  }
+}
+
 #[frame_support::pallet()]
 pub mod pallet {
 	use super::*;
@@ -56,6 +85,9 @@ pub mod pallet {
 		/// Minimum number of validators to leave in the validator set during
 		/// auto removal.
 		type MinAuthorities: Get<u32>;
+
+    /// Action to be executed when a validator is disabled
+    type OnDisabled: OnDisabled<Self>;
 
 		/// Information on runtime weights.
 		type WeightInfo: WeightInfo;
@@ -335,7 +367,7 @@ impl<T: Config, O: Offence<(T::ValidatorId, T::ValidatorId)>>
 	}
 }
 
-// Implementation of OnOffenceHandler.
+// Implementation of `OnOffenceHandler`.
 // This is for the Offences + Historical pallets integration.
 impl<T: Config>
 	OnOffenceHandler<T::AccountId, pallet_session::historical::IdentificationTuple<T>, Weight>
@@ -348,23 +380,33 @@ where
 			T::AccountId,
 			pallet_session::historical::IdentificationTuple<T>,
 		>],
-		_slash_fraction: &[Perbill],
-		_slash_session: SessionIndex,
-		_disable_strategy: DisableStrategy,
+		slash_fraction: &[Perbill],
+		slash_session: SessionIndex,
+		disable_strategy: DisableStrategy,
 	) -> Weight {
-		let mut consumed_weight = Weight::from_parts(0, 0);
-		let mut add_db_reads_writes = |reads, writes| {
-			consumed_weight += T::DbWeight::get().reads_writes(reads, writes);
-		};
+		let mut consumed_weight = Weight::zero();
 
     offenders.iter().for_each(|o| {
       let offender = o.offender.clone();
-      if Self::disable_validator(&offender.0) {
-        // Validator was not yet disabled, it is added to `DisabledValidators`
-        add_db_reads_writes(1, 1);
-      } else {
-        // Validator was already disabled, it is not added to `DisabledValidators` (no writes)
-        add_db_reads_writes(1, 0);
+
+      match disable_strategy {
+        DisableStrategy::WhenSlashed | DisableStrategy::Always => {
+          if Self::disable_validator(&offender.0) {
+            // Validator was not yet disabled, it is added to `DisabledValidators`
+            consumed_weight += T::DbWeight::get().reads_writes(1, 1);
+            // Execute `on_disabled` action
+            consumed_weight += T::OnDisabled::on_disabled(
+              &offender.0,
+              slash_fraction,
+              slash_session,
+              disable_strategy
+            );
+          } else {
+            // Validator was already disabled, it is not added to `DisabledValidators` (no writes)
+            consumed_weight += T::DbWeight::get().reads_writes(1, 0);
+          }
+        },
+        DisableStrategy::Never => {},
       }
     });
 
