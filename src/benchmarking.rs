@@ -1,7 +1,6 @@
 #![cfg(feature = "runtime-benchmarks")]
 
 use super::*;
-use crate::Pallet as ValidatorSet;
 use frame_benchmarking::v1::{account, benchmarks, BenchmarkError};
 use frame_support::traits::EnsureOrigin;
 
