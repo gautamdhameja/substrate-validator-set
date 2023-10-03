@@ -179,7 +179,6 @@ fn testnet_genesis(
 ## Run
 
 Once you have set up the pallet in your node/node-template and everything compiles, follow the steps in [docs/local-network-setup.md](./docs/local-network-setup.md) to run a local network and add validators.
-Also, watch this video to see this in action - https://www.youtube.com/watch?v=lIYxE-tOAdw.
 
 ## Extensions
 
