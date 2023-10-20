@@ -27,12 +27,55 @@ use frame_support::{
 };
 use log;
 pub use pallet::*;
-use sp_runtime::traits::{Convert, Zero};
-use sp_staking::offence::{Offence, OffenceError, ReportOffence};
+use sp_runtime::{traits::{Convert, Zero}, Perbill, RuntimeDebug};
+use sp_staking::{
+  offence::{
+    DisableStrategy, Offence, OffenceError, OffenceDetails, OnOffenceHandler, ReportOffence,
+  },
+  SessionIndex,
+};
 use sp_std::prelude::*;
 pub use weights::*;
 
 pub const LOG_TARGET: &'static str = "runtime::validator-set";
+
+/// Trait that defines an action to be executed when a validator is disabled.
+/// It is agnostic about what is done in that action, `on_disabled` method just
+/// expects a `Weight` in return.
+pub trait OnDisabled<T>
+where
+  T: frame_system::Config + pallet_session::Config
+{
+  fn on_disabled(
+		offender: &T::ValidatorId,
+		slash_fraction: &[Perbill],
+		slash_session: SessionIndex,
+		disable_strategy: DisableStrategy,
+  ) -> Weight;
+}
+
+impl<T> OnDisabled<T> for ()
+where
+  T: frame_system::Config + pallet_session::Config
+{
+  fn on_disabled(
+    _offenders: &T::ValidatorId,
+		_slash_fraction: &[Perbill],
+		_slash_session: SessionIndex,
+		_disable_strategy: DisableStrategy,
+  ) -> Weight {
+    Weight::zero()
+  }
+}
+
+/// Reason for a validator to be removed from the active set
+#[derive(RuntimeDebug)]
+pub enum RemovalReason {
+  /// The validator went offline
+  Offline,
+  /// The validator was disabled
+  Disabled,
+}
 
 #[frame_support::pallet()]
 pub mod pallet {
@@ -52,6 +95,12 @@ pub mod pallet {
 		/// auto removal.
 		type MinAuthorities: Get<u32>;
 
+    /// Action to be executed when a validator is disabled
+    type OnDisabled: OnDisabled<Self>;
+
+    /// Check `MinAuthorities` before removing validators when disabled
+    type MinAuthoritiesOnDisabled: Get<bool>;
+
 		/// Information on runtime weights.
 		type WeightInfo: WeightInfo;
 	}
@@ -67,6 +116,10 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn offline_validators)]
 	pub type OfflineValidators<T: Config> = StorageValue<_, Vec<T::ValidatorId>, ValueQuery>;
+
+  #[pallet::storage]
+	#[pallet::getter(fn disabled_validators)]
+	pub type DisabledValidators<T: Config> = StorageValue<_, Vec<T::ValidatorId>, ValueQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -183,9 +236,15 @@ impl<T: Config> Pallet<T> {
 	}
 
 	// Adds offline validators to a local cache for removal on new session.
-	fn mark_for_removal(validator_id: T::ValidatorId) {
+	fn mark_offline_for_removal(validator_id: T::ValidatorId) {
 		<OfflineValidators<T>>::mutate(|v| v.push(validator_id));
 		log::debug!(target: LOG_TARGET, "Offline validator marked for auto removal.");
+	}
+
+  // Adds disabled validators to a local cache for removal on new session.
+	fn mark_disabled_for_removal(validator_id: T::ValidatorId) {
+		<DisabledValidators<T>>::mutate(|v| v.push(validator_id));
+		log::debug!(target: LOG_TARGET, "Disabled validator marked for auto removal.");
 	}
 
 	// Removes offline validators from the validator set and clears the offline
@@ -196,17 +255,66 @@ impl<T: Config> Pallet<T> {
 	fn remove_offline_validators() {
 		let validators_to_remove = <OfflineValidators<T>>::get();
 
-		// Delete from active validator set.
-		<Validators<T>>::mutate(|vs| vs.retain(|v| !validators_to_remove.contains(v)));
-		log::debug!(
-			target: LOG_TARGET,
-			"Initiated removal of {:?} offline validators.",
-			validators_to_remove.len()
-		);
+    // Validators will be always removed because there is not any kid of checking
+    let _ = Self::do_remove_validators(&validators_to_remove, false, RemovalReason::Offline);
 
-		// Clear the offline validator list to avoid repeated deletion.
+    // Clear the offline validator list to avoid repeated deletion.
 		<OfflineValidators<T>>::put(Vec::<T::ValidatorId>::new());
 	}
+
+  // Removes disabled validators from the validator set.
+  // It is called in the session change hook and removes the validators
+	// who were disabled.
+  fn remove_disabled_validators() {
+    let validators_to_remove = <DisabledValidators<T>>::get();
+
+    match Self::do_remove_validators(&validators_to_remove, T::MinAuthoritiesOnDisabled::get(), RemovalReason::Disabled) {
+      Ok(_) => {
+        // Clear the offline validator list to avoid repeated deletion.
+        <DisabledValidators<T>>::put(Vec::<T::ValidatorId>::new());
+      },
+      Err(_) => {
+        // Number of active validators was going to drop under `MinAuthorities`
+        log::error!(
+          target: LOG_TARGET,
+          "Number of validators was going to drop below MinAuthorities ({:?}) after removing {:?} disabled validators",
+          T::MinAuthorities::get(),
+          validators_to_remove.len(),
+        );
+      }
+    }
+  }
+
+  fn do_remove_validators(
+    validators: &Vec<T::ValidatorId>,
+    check_min_authorities: bool,
+    reason: RemovalReason
+  ) -> Result<(), DispatchError> {
+    let validators_len_to_remove = validators.len();
+    let current_validators_len = Self::validators().len();
+
+    if check_min_authorities {
+      if let Some(validators_left_len) = current_validators_len.checked_sub(validators_len_to_remove) {
+        ensure!(validators_left_len as u32 >= T::MinAuthorities::get(), Error::<T>::TooLowValidatorCount);
+      }
+    }
+
+    <Validators<T>>::mutate(|vs| vs.retain(|v| !validators.contains(v)));
+
+		log::debug!(
+			target: LOG_TARGET,
+			"Initiated removal of {:?} validators, reason: {:?}.",
+			validators.len(),
+      reason
+		);
+
+    Ok(())
+  }
+
+  // Disable validator from current `pallet_session` validators set
+  fn disable_validator(validator: &T::ValidatorId) -> bool {
+    <pallet_session::Pallet<T>>::disable(validator)
+  }
 }
 
 // Provides the new set of validators to the session module when session is
@@ -217,6 +325,9 @@ impl<T: Config> pallet_session::SessionManager<T::ValidatorId> for Pallet<T> {
 		// Remove any offline validators. This will only work when the runtime
 		// also has the im-online pallet.
 		Self::remove_offline_validators();
+    // Remove any disabled validators. This will only work when the runtime
+		// also has the offences and session::historical pallets
+    Self::remove_disabled_validators();
 
 		log::debug!(target: LOG_TARGET, "New session called; updated validator set provided.");
 
@@ -260,7 +371,7 @@ impl<T: Config> ValidatorSet<T::ValidatorId> for Pallet<T> {
 	type ValidatorId = T::ValidatorId;
 	type ValidatorIdOf = ValidatorOf<T>;
 
-	fn session_index() -> sp_staking::SessionIndex {
+	fn session_index() -> SessionIndex {
 		pallet_session::Pallet::<T>::current_index()
 	}
 
@@ -283,7 +394,7 @@ impl<T: Config, O: Offence<(T::ValidatorId, T::ValidatorId)>>
 		let offenders = offence.offenders();
 
 		for (v, _) in offenders.into_iter() {
-			Self::mark_for_removal(v);
+			Self::mark_offline_for_removal(v);
 		}
 
 		Ok(())
@@ -294,5 +405,56 @@ impl<T: Config, O: Offence<(T::ValidatorId, T::ValidatorId)>>
 		_time_slot: &O::TimeSlot,
 	) -> bool {
 		false
+	}
+}
+
+// Implementation of `OnOffenceHandler`.
+// This is for the Offences + Historical pallets integration.
+impl<T: Config>
+	OnOffenceHandler<T::AccountId, pallet_session::historical::IdentificationTuple<T>, Weight>
+	for Pallet<T>
+where
+	T: pallet_session::historical::Config,
+{
+	fn on_offence(
+		offenders: &[OffenceDetails<
+			T::AccountId,
+			pallet_session::historical::IdentificationTuple<T>,
+		>],
+		slash_fraction: &[Perbill],
+		slash_session: SessionIndex,
+		disable_strategy: DisableStrategy,
+	) -> Weight {
+		let mut consumed_weight = Weight::zero();
+
+    offenders.iter().for_each(|o| {
+      let offender = o.offender.clone();
+
+      match disable_strategy {
+        DisableStrategy::WhenSlashed | DisableStrategy::Always => {
+          if Self::disable_validator(&offender.0) {
+            // Validator was not yet disabled, it is added to pallet_session `DisabledValidators`
+            consumed_weight += T::DbWeight::get().reads_writes(1, 1);
+            // Validator is added to local `DisabledValidators`
+            Self::mark_disabled_for_removal(offender.0.clone());
+            consumed_weight += T::DbWeight::get().reads_writes(1, 1);
+
+            // Execute `on_disabled` action
+            consumed_weight += T::OnDisabled::on_disabled(
+              &offender.0,
+              slash_fraction,
+              slash_session,
+              disable_strategy
+            );
+          } else {
+            // Validator was already disabled, it is not added to `DisabledValidators` (no writes)
+            consumed_weight += T::DbWeight::get().reads_writes(1, 0);
+          }
+        },
+        DisableStrategy::Never => {},
+      }
+    });
+
+    consumed_weight
 	}
 }

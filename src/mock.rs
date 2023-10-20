@@ -174,12 +174,15 @@ impl frame_system::Config for Test {
 
 parameter_types! {
 	pub const MinAuthorities: u32 = 2;
+  pub const MinAuthoritiesOnDisabled: bool = true;
 }
 
 impl validator_set::Config for Test {
 	type AddRemoveOrigin = EnsureRoot<Self::AccountId>;
 	type RuntimeEvent = RuntimeEvent;
 	type MinAuthorities = MinAuthorities;
+  type OnDisabled = ();
+  type MinAuthoritiesOnDisabled = MinAuthoritiesOnDisabled;
 	type WeightInfo = ();
 }
 
