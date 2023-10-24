@@ -1,8 +1,8 @@
 # Substrate Validator Set Pallet
 
-A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove authorities/validators in PoA networks.
+A [Substrate](https://github.com/paritytech/polkadot-sdk/tree/master/substrate#substrate) pallet to add/remove authorities/validators in PoA networks.
 
-**Note: Current master is compatible with Substrate [polkadot-v1.0.0](https://github.com/paritytech/substrate/tree/polkadot-v1.0.0) branch. For older versions, please see releases/tags.**
+**Note: Current master is compatible with Substrate [polkadot-v1.1.0](https://github.com/paritytech/polkadot-sdk/tree/polkadot-v1.1.0) branch. For older versions, please see releases/tags.**
 
 ## Setup with Substrate Node Template
 
@@ -10,19 +10,19 @@ A [Substrate](https://github.com/paritytech/substrate/) pallet to add/remove aut
 
 * Add the module's dependency in the `Cargo.toml` of your runtime directory. Make sure to enter the correct path or git url of the pallet as per your setup.
 
-* Make sure that you also have the Substrate [session pallet](https://github.com/paritytech/substrate/tree/master/frame/session) as part of your runtime. This is because the validator-set pallet is dependent on the session pallet.
+* Make sure that you also have the Substrate [session pallet](https://github.com/paritytech/polkadot-sdk/tree/master/substrate/frame/session) as part of your runtime. This is because the validator-set pallet is dependent on the session pallet.
 
 ```toml
 [dependencies.validator-set]
 default-features = false
 package = 'substrate-validator-set'
 git = 'https://github.com/gautamdhameja/substrate-validator-set.git'
-version = '0.9.42'
+version = '1.1.0'
 
 [dependencies.pallet-session]
 default-features = false
-git = 'https://github.com/paritytech/substrate.git'
-branch = 'polkadot-v1.0.0'
+git = 'https://github.com/paritytech/polkadot-sdk.git'
+tag = 'polkadot-v1.1.0'
 ```
 
 ```toml

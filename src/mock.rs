@@ -4,7 +4,7 @@
 
 use super::*;
 use crate as validator_set;
-use frame_support::{parameter_types, BasicExternalities};
+use frame_support::parameter_types;
 use frame_system::EnsureRoot;
 use pallet_session::*;
 use sp_core::{crypto::key_types::DUMMY, H256};
@@ -14,6 +14,7 @@ use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup, OpaqueKeys},
 	BuildStorage, KeyTypeId, RuntimeAppPublic,
 };
+use sp_state_machine::BasicExternalities;
 use std::cell::RefCell;
 
 impl_opaque_keys! {
