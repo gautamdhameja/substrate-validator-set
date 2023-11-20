@@ -2,7 +2,7 @@
 
 A [Substrate](https://github.com/paritytech/polkadot-sdk/tree/master/substrate#substrate) pallet to add/remove authorities/validators in PoA networks.
 
-**Note: Current master is compatible with Substrate [polkadot-v1.1.0](https://github.com/paritytech/polkadot-sdk/tree/polkadot-v1.1.0) branch. For older versions, please see releases/tags.**
+**Note: Current master is compatible with Substrate [polkadot-v1.2.0](https://github.com/paritytech/polkadot-sdk/tree/polkadot-v1.2.0) branch. For older versions, please see releases/tags.**
 
 ## Setup with Substrate Node Template
 
@@ -22,7 +22,7 @@ version = '1.1.0'
 [dependencies.pallet-session]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.1.0'
+tag = 'polkadot-v1.2.0'
 ```
 
 ```toml
