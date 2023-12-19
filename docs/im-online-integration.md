@@ -12,7 +12,7 @@
 [dependencies.pallet-im-online]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.3.0'
+tag = 'polkadot-v1.5.0'
 ```
 
 ```toml
@@ -150,7 +150,7 @@ construct_runtime!(
 [dependencies.pallet-im-online]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.3.0'
+tag = 'polkadot-v1.5.0'
 ```
 
 * Import `ImOnlineId` in the `chain_spec.rs`.
