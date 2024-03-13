@@ -4,7 +4,7 @@
 
 use super::*;
 use crate as validator_set;
-use frame_support::parameter_types;
+use frame_support::{derive_impl, parameter_types};
 use frame_system::EnsureRoot;
 use pallet_session::*;
 use sp_core::{crypto::key_types::DUMMY, H256};
@@ -147,6 +147,7 @@ parameter_types! {
 		frame_system::limits::BlockWeights::simple_max(frame_support::weights::Weight::from_parts(1024, 0));
 }
 
+#[derive_impl(frame_system::config_preludes::TestDefaultConfig as frame_system::DefaultConfig)]
 impl frame_system::Config for Test {
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = ();
