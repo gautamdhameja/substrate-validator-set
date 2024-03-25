@@ -57,8 +57,7 @@ impl OpaqueKeys for PreUpgradeMockSessionKeys {
 type Block = frame_system::mocking::MockBlock<Test>;
 
 frame_support::construct_runtime!(
-	pub struct Test
-	{
+	pub struct Test {
 		System: frame_system,
 		ValidatorSet: validator_set,
 		Session: pallet_session,

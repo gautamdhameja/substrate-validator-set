@@ -18,13 +18,13 @@ mod mock;
 mod tests;
 pub mod weights;
 
-use frame_system::pallet_prelude::*;
 use frame_support::{
 	ensure,
 	pallet_prelude::*,
 	traits::{EstimateNextSessionRotation, Get, ValidatorSet, ValidatorSetWithIdentification},
 	DefaultNoBound,
 };
+use frame_system::pallet_prelude::*;
 use log;
 pub use pallet::*;
 use sp_runtime::traits::{Convert, Zero};
