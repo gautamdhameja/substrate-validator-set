@@ -50,6 +50,7 @@ pub mod pallet {
 
 		/// Minimum number of validators to leave in the validator set during
 		/// auto removal.
+		/// Initial validator count could be less than this.
 		type MinAuthorities: Get<u32>;
 
 		/// Information on runtime weights.
@@ -99,7 +100,8 @@ pub mod pallet {
 	#[pallet::genesis_build]
 	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
 		fn build(&self) {
-			Pallet::<T>::initialize_validators(&self.initial_validators);
+			assert!(<Validators<T>>::get().is_empty(), "Validators are already initialized!");
+			<Validators<T>>::put(&self.initial_validators);
 		}
 	}
 
@@ -142,16 +144,6 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	fn initialize_validators(validators: &[T::ValidatorId]) {
-		assert!(
-			validators.len() as u32 >= T::MinAuthorities::get(),
-			"Initial set of validators must be at least T::MinAuthorities"
-		);
-		assert!(<Validators<T>>::get().is_empty(), "Validators are already initialized!");
-
-		<Validators<T>>::put(validators);
-	}
-
 	fn do_add_validator(validator_id: T::ValidatorId) -> DispatchResult {
 		ensure!(!<Validators<T>>::get().contains(&validator_id), Error::<T>::Duplicate);
 		<Validators<T>>::mutate(|v| v.push(validator_id.clone()));
