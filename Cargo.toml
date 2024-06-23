@@ -65,12 +65,12 @@ tag = 'polkadot-v1.11.0'
 
 [dependencies.scale-info]
 default-features = false
-features = ['derive']
-version = '2.10.0'
+features = ['derive', 'serde']
+version = '2.11.1'
 
 [dependencies.log]
 default-features = false
-version = '0.4.20'
+version = '0.4.21'
 
 [dependencies.codec]
 default-features = false
