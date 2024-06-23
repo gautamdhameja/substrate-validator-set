@@ -9,59 +9,59 @@ repository = 'https://github.com/gautamdhameja/substrate-validator-set'
 [dependencies.sp-core]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.10.0'
+tag = 'polkadot-v1.11.0'
 
 [dependencies.sp-io]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.10.0'
+tag = 'polkadot-v1.11.0'
 
 [dependencies.sp-runtime]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.10.0'
+tag = 'polkadot-v1.11.0'
 
 [dependencies.sp-std]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.10.0'
+tag = 'polkadot-v1.11.0'
 
 [dependencies.sp-staking]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.10.0'
+tag = 'polkadot-v1.11.0'
 
 [dependencies.frame-benchmarking]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
 optional = true
-tag = 'polkadot-v1.10.0'
+tag = 'polkadot-v1.11.0'
 
 [dependencies.frame-support]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.10.0'
+tag = 'polkadot-v1.11.0'
 
 [dependencies.frame-system]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.10.0'
+tag = 'polkadot-v1.11.0'
 
 [dependencies.pallet-session]
 default-features = false
 features = ['historical']
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.10.0'
+tag = 'polkadot-v1.11.0'
 
 [dependencies.sp-weights]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.10.0'
+tag = 'polkadot-v1.11.0'
 
 [dev-dependencies.sp-state-machine]
 default-features = false
 git = 'https://github.com/paritytech/polkadot-sdk.git'
-tag = 'polkadot-v1.10.0'
+tag = 'polkadot-v1.11.0'
 
 [dependencies.scale-info]
 default-features = false
