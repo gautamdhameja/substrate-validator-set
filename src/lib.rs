@@ -220,6 +220,40 @@ impl<T: Config> pallet_session::SessionManager<T::ValidatorId> for Pallet<T> {
 	fn start_session(_start_index: u32) {}
 }
 
+impl<T: Config> pallet_session::historical::SessionManager<T::ValidatorId, T::ValidatorId> for Pallet<T> {
+	fn new_session(new_index: u32) -> Option<Vec<(T::ValidatorId, T::ValidatorId)>> {
+		<Self as pallet_session::SessionManager<_>>::new_session(new_index).map(|validators| {
+				validators
+				.into_iter()
+				.map(|v| {
+					(v.clone(), v)
+				})
+				.collect()
+			}
+		)
+	}
+
+	fn new_session_genesis(new_index: u32) -> Option<Vec<(T::ValidatorId, T::ValidatorId)>> {
+		<Self as pallet_session::SessionManager<_>>::new_session(new_index).map(|validators| {
+				validators
+				.into_iter()
+				.map(|v| {
+					(v.clone(), v)
+				})
+				.collect()
+			}
+		)
+	}
+
+	fn end_session(end_index: u32) {
+		<Self as pallet_session::SessionManager<_>>::end_session(end_index)
+	}
+
+	fn start_session(start_index: u32) {
+		<Self as pallet_session::SessionManager<_>>::start_session(start_index)
+	}
+}
+
 impl<T: Config> EstimateNextSessionRotation<BlockNumberFor<T>> for Pallet<T> {
 	fn average_session_length() -> BlockNumberFor<T> {
 		Zero::zero()
